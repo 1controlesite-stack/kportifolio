@@ -1,15 +1,22 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Rocket, Loader2 } from "lucide-react";
 import PortfolioCard from "./PortfolioCard";
 import PortfolioFilters from "./PortfolioFilters";
 import { useProjects } from "@/hooks/useProjects";
+import {
+  Pagination, PaginationContent, PaginationItem,
+  PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis,
+} from "@/components/ui/pagination";
+
+const ITEMS_PER_PAGE = 12;
 
 const PortfolioSection = () => {
   const { data: projects = [], isLoading } = useProjects();
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filtered = useMemo(() => {
     let result = projects;
@@ -27,6 +34,27 @@ const PortfolioSection = () => {
     }
     return result;
   }, [activeCategory, searchQuery, projects]);
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedItems = useMemo(
+    () => filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE),
+    [filtered, currentPage]
+  );
+
+  const handleCategoryChange = useCallback((cat: string) => {
+    setActiveCategory(cat);
+    setCurrentPage(1);
+  }, []);
+
+  const handleSearchChange = useCallback((q: string) => {
+    setSearchQuery(q);
+    setCurrentPage(1);
+  }, []);
+
+  const goToPage = useCallback((page: number) => {
+    setCurrentPage(page);
+    document.getElementById("projetos")?.scrollIntoView({ behavior: "smooth" });
+  }, []);
 
   return (
     <section id="projetos" className="relative py-24 md:py-32 px-4 section-light overflow-hidden">
@@ -69,9 +97,9 @@ const PortfolioSection = () => {
           <PortfolioFilters
             projects={projects}
             searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
+            onSearchChange={handleSearchChange}
             activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
+            onCategoryChange={handleCategoryChange}
           />
         </motion.div>
 
@@ -112,9 +140,10 @@ const PortfolioSection = () => {
             </a>
           </motion.div>
         ) : (
+          <>
           <AnimatePresence mode="popLayout">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-6 items-end">
-              {filtered.map((project, i) => {
+              {paginatedItems.map((project, i) => {
                 const col = i % 4;
                 const zIndex = 4 - col;
 
@@ -144,6 +173,57 @@ const PortfolioSection = () => {
               })}
             </div>
           </AnimatePresence>
+
+          {totalPages > 1 && (
+            <motion.div
+              className="mt-12"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+            >
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => currentPage > 1 && goToPage(currentPage - 1)}
+                      className={currentPage <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    if (totalPages <= 5 || page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            isActive={page === currentPage}
+                            onClick={() => goToPage(page)}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                    if (page === 2 && currentPage > 3) {
+                      return <PaginationItem key="start-ellipsis"><PaginationEllipsis /></PaginationItem>;
+                    }
+                    if (page === totalPages - 1 && currentPage < totalPages - 2) {
+                      return <PaginationItem key="end-ellipsis"><PaginationEllipsis /></PaginationItem>;
+                    }
+                    return null;
+                  })}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => currentPage < totalPages && goToPage(currentPage + 1)}
+                      className={currentPage >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </motion.div>
+          )}
+          </>
         )}
         </>
         )}
