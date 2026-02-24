@@ -15,21 +15,6 @@ interface Particle {
   colorIdx: number;
 }
 
-// Zodiac constellations — normalized coordinates (0-1) for each star
-const CONSTELLATIONS: { name: string; stars: [number, number][] }[] = [
-  { name: "Aries", stars: [[0.5,0.2],[0.4,0.4],[0.35,0.6],[0.6,0.4],[0.65,0.6]] },
-  { name: "Taurus", stars: [[0.3,0.3],[0.4,0.4],[0.5,0.5],[0.6,0.4],[0.7,0.3],[0.45,0.65],[0.55,0.65]] },
-  { name: "Gemini", stars: [[0.3,0.2],[0.3,0.5],[0.3,0.8],[0.7,0.2],[0.7,0.5],[0.7,0.8]] },
-  { name: "Cancer", stars: [[0.5,0.2],[0.35,0.45],[0.65,0.45],[0.4,0.7],[0.6,0.7]] },
-  { name: "Leo", stars: [[0.3,0.3],[0.4,0.2],[0.5,0.3],[0.55,0.45],[0.5,0.6],[0.6,0.7],[0.7,0.6],[0.75,0.75]] },
-  { name: "Virgo", stars: [[0.2,0.3],[0.35,0.25],[0.5,0.35],[0.6,0.5],[0.5,0.65],[0.7,0.7],[0.4,0.8]] },
-  { name: "Libra", stars: [[0.5,0.2],[0.3,0.5],[0.7,0.5],[0.35,0.75],[0.65,0.75]] },
-  { name: "Scorpio", stars: [[0.15,0.4],[0.25,0.35],[0.35,0.4],[0.45,0.5],[0.55,0.6],[0.65,0.7],[0.75,0.65],[0.8,0.55]] },
-  { name: "Sagittarius", stars: [[0.3,0.7],[0.4,0.55],[0.5,0.4],[0.6,0.3],[0.55,0.55],[0.65,0.65],[0.7,0.5]] },
-  { name: "Capricorn", stars: [[0.3,0.3],[0.45,0.25],[0.6,0.35],[0.7,0.5],[0.55,0.65],[0.4,0.7]] },
-  { name: "Aquarius", stars: [[0.2,0.4],[0.35,0.3],[0.5,0.45],[0.6,0.35],[0.75,0.5],[0.85,0.4]] },
-  { name: "Pisces", stars: [[0.3,0.3],[0.4,0.45],[0.5,0.55],[0.6,0.45],[0.7,0.3],[0.5,0.7]] },
-];
 
 const NetworkParticles = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -53,38 +38,15 @@ const NetworkParticles = () => {
 
     const initParticles = () => {
       const rect = canvas.getBoundingClientRect();
-      const isMobile = rect.width < 768;
-      const activeConstellations = isMobile
-        ? CONSTELLATIONS.filter((_, i) => i % 2 === 0) // 6 on mobile
-        : CONSTELLATIONS;
-
-      const cols = isMobile ? 3 : 4;
-      const rows = Math.ceil(activeConstellations.length / cols);
-      const cellW = rect.width / cols;
-      const cellH = rect.height / rows;
-      const scale = Math.min(cellW, cellH) * 0.6;
-
-      const particles: Particle[] = [];
-
-      activeConstellations.forEach((constellation, idx) => {
-        const col = idx % cols;
-        const row = Math.floor(idx / cols);
-        const cx = cellW * (col + 0.5);
-        const cy = cellH * (row + 0.5);
-
-        constellation.stars.forEach(([sx, sy]) => {
-          particles.push({
-            x: cx + (sx - 0.5) * scale + (Math.random() - 0.5) * 4,
-            y: cy + (sy - 0.5) * scale + (Math.random() - 0.5) * 4,
-            vx: 0,
-            vy: 0,
-            radius: 1.5 + Math.random(),
-            colorIdx: Math.floor(Math.random() * 3),
-          });
-        });
-      });
-
-      particlesRef.current = particles;
+      const count = rect.width < 768 ? 50 : 100;
+      particlesRef.current = Array.from({ length: count }, () => ({
+        x: Math.random() * rect.width,
+        y: Math.random() * rect.height,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        radius: 1.5 + Math.random(),
+        colorIdx: Math.floor(Math.random() * 3),
+      }));
     };
 
     resize();
