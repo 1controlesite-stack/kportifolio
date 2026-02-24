@@ -1,26 +1,27 @@
 
 
-# Correção de Bugs: Z-index dos Filtros e Estado Vazio
+# Melhorias na Barra de Filtros do Portfolio
 
-## Bug 1: Hover dos cards cobre a barra de filtros/dropdown
+## Problemas identificados (pela screenshot)
 
-O problema: os cards usam `whileHover={{ zIndex: 100 }}` no framer-motion, o que faz o card subir acima do dropdown de categorias "Mais". O container dos filtros precisa de um z-index maior.
+1. **Barra de filtros nao ocupa 100% da largura** -- o `max-w-sm` na caixa de busca limita o tamanho, e o layout nao se espalha
+2. **Caixa de pesquisa pequena** -- altura `h-9` e `max-w-sm` deixam o input apertado
+3. **"Nenhuma encontrada" mal cabe** -- o `CommandEmpty` com `text-xs` e o popover com `w-48` sao muito estreitos
 
-### Arquivo: `src/components/PortfolioSection.tsx`
+## Alteracoes
 
-- Adicionar `className="relative z-[110]"` ao `motion.div` que envolve o `PortfolioFilters` (linha 46), garantindo que a barra de filtros e seu dropdown fiquem sempre acima dos cards com hover.
+### Arquivo: `src/components/PortfolioFilters.tsx`
 
-## Bug 2: Pesquisa global nao mostra estado vazio
+1. **Layout full-width**: Trocar `justify-center` por `justify-between` no container principal, e remover `max-w-sm` do input de busca para que o `flex-1` ocupe todo o espaco disponivel
+2. **Input maior**: Aumentar altura de `h-9` para `h-11`, e aumentar o tamanho do texto de `text-sm` para `text-base`
+3. **Popover mais largo**: Aumentar `w-48` para `w-56` no `PopoverContent` para que "Nenhuma encontrada." caiba confortavelmente
+4. **Texto do empty state**: Aumentar de `text-xs` para `text-sm` no `CommandEmpty`
 
-Pela screenshot, parece que a busca dentro do combobox "Mais" (que e apenas para filtrar categorias) esta sendo confundida com a busca global. O estado vazio ja existe no codigo (linhas 61-96) e deveria funcionar. O problema pode ser que a busca global (input principal) nao esta visivel ou acessivel por causa do z-index.
-
-A correcao do z-index (Bug 1) deve resolver a acessibilidade do input de busca. Tambem vou verificar que o estado vazio esta renderizando corretamente quando `filtered.length === 0`.
-
-## Resumo
-
-| Arquivo | Acao |
+| Linha | Mudanca |
 |---|---|
-| `src/components/PortfolioSection.tsx` | Adicionar `relative z-[110]` ao wrapper dos filtros |
-
-Correcao simples e cirurgica -- apenas o z-index do container de filtros precisa ser elevado acima do `zIndex: 100` dos cards em hover.
+| 36 | `justify-center` -> `justify-between` |
+| 38 | Remover `max-w-sm` |
+| 45 | `h-9` -> `h-11`, `text-sm` -> `text-base` |
+| 99 | `w-48` -> `w-56` |
+| 103 | `CommandEmpty` text `text-xs` -> `text-sm` |
 
