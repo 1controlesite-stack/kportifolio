@@ -71,6 +71,31 @@
   }
 }
 
+/* Animated gradient border for cards */
+.gradient-border-animated {
+  padding: 1px;
+  background: transparent;
+  border-radius: 0.5rem;
+  transition: background 0.4s ease;
+}
+.gradient-border-animated:hover {
+  background: linear-gradient(
+    var(--gradient-angle, 135deg),
+    hsl(var(--kenkya-purple)),
+    hsl(var(--kenkya-blue)),
+    hsl(var(--kenkya-cyan)),
+    hsl(var(--kenkya-purple))
+  );
+  background-size: 300% 300%;
+  animation: gradient-rotate 3s linear infinite;
+}
+
+@keyframes gradient-rotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 /* Custom cursor */
 html {
   cursor: default;

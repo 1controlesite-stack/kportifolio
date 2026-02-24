@@ -1,21 +1,29 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import PortfolioCard from "./PortfolioCard";
+import PortfolioFilters from "./PortfolioFilters";
 import { projects } from "@/data/projects";
 
 const PortfolioSection = () => {
   const [activeCategory, setActiveCategory] = useState("Todos");
-
-  const categories = useMemo(() => {
-    const tags = new Set<string>();
-    projects.forEach((p) => p.tags.forEach((t) => tags.add(t)));
-    return ["Todos", ...Array.from(tags)];
-  }, []);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const filtered = useMemo(() => {
-    if (activeCategory === "Todos") return projects;
-    return projects.filter((p) => p.tags.includes(activeCategory));
-  }, [activeCategory]);
+    let result = projects;
+    if (activeCategory !== "Todos") {
+      result = result.filter((p) => p.tags.includes(activeCategory));
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.title.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.tags.some((t) => t.toLowerCase().includes(q))
+      );
+    }
+    return result;
+  }, [activeCategory, searchQuery]);
 
   return (
     <section id="projetos" className="py-24 md:py-32 px-4 bg-background">
@@ -33,27 +41,20 @@ const PortfolioSection = () => {
           </p>
         </motion.div>
 
-        {/* Category filters */}
+        {/* Filters */}
         <motion.div
-          className="flex flex-wrap justify-center gap-2 mb-12"
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`text-xs px-4 py-2 rounded-full font-body transition-all duration-300 ${
-                activeCategory === cat
-                  ? "gradient-bg text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+          <PortfolioFilters
+            projects={projects}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+          />
         </motion.div>
 
         {/* 4-column grid with horizontal overlap (left over right) */}
