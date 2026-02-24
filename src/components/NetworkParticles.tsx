@@ -37,12 +37,12 @@ const NetworkParticles = () => {
 
     const initParticles = () => {
       const rect = canvas.getBoundingClientRect();
-      const count = rect.width < 768 ? 40 : 80;
+      const count = rect.width < 768 ? 50 : 100;
       particlesRef.current = Array.from({ length: count }, () => ({
         x: Math.random() * rect.width,
         y: Math.random() * rect.height,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
         radius: 1.5 + Math.random(),
         colorIdx: Math.floor(Math.random() * 3),
       }));
@@ -69,7 +69,7 @@ const NetworkParticles = () => {
     window.addEventListener("mouseleave", onLeave);
 
     const MAX_DIST = 150;
-    const MOUSE_RADIUS = 120;
+    const MOUSE_RADIUS = 150;
 
     const animate = () => {
       const rect = canvas.getBoundingClientRect();
@@ -82,12 +82,12 @@ const NetworkParticles = () => {
 
       // Update positions
       for (const p of particles) {
-        // Mouse interaction
-        const dx = p.x - mouse.x;
-        const dy = p.y - mouse.y;
+        // Mouse interaction — attract toward cursor
+        const dx = mouse.x - p.x;
+        const dy = mouse.y - p.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < MOUSE_RADIUS && dist > 1) {
-          const force = 0.8 / (dist * dist) * MOUSE_RADIUS;
+        if (dist < MOUSE_RADIUS && dist > 5) {
+          const force = 0.4 / dist;
           p.vx += (dx / dist) * force;
           p.vy += (dy / dist) * force;
         }
@@ -133,13 +133,17 @@ const NetworkParticles = () => {
         }
       }
 
-      // Draw particles
+      // Draw particles with glow
+      ctx.shadowBlur = 10;
       for (const p of particles) {
+        const glowColor = COLORS[p.colorIdx] + "0.6)";
+        ctx.shadowColor = glowColor;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = COLORS[p.colorIdx] + "0.5)";
+        ctx.fillStyle = COLORS[p.colorIdx] + "0.7)";
         ctx.fill();
       }
+      ctx.shadowBlur = 0;
 
       rafRef.current = requestAnimationFrame(animate);
     };
