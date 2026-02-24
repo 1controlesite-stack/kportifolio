@@ -1,67 +1,26 @@
 
 
-# Refinamento do Portfolio: Filtros, Contraste e Borda Gradiente
+# Correção de Bugs: Z-index dos Filtros e Estado Vazio
 
-## 1. Nova barra de filtros e busca (substituir os botoes atuais)
+## Bug 1: Hover dos cards cobre a barra de filtros/dropdown
 
-O layout atual e uma linha de botoes simples. A nova abordagem coloca tudo numa unica linha responsiva:
+O problema: os cards usam `whileHover={{ zIndex: 100 }}` no framer-motion, o que faz o card subir acima do dropdown de categorias "Mais". O container dos filtros precisa de um z-index maior.
 
-```text
-[ Icone Busca | Input de busca por palavra-chave ]  [ Todos | SaaS | Apps | E-commerce | Mais v ]
-```
+### Arquivo: `src/components/PortfolioSection.tsx`
 
-- **Barra de busca global** (lado esquerdo): Input com icone de lupa que filtra projetos por titulo, descricao, tags ou qualquer texto dentro do projeto
-- **Categorias expostas** (lado direito): As 3-4 categorias mais frequentes como chips clicaveis
-- **Combobox "Mais categorias"**: Um Popover com input de busca interno que lista todas as categorias restantes. Usa o componente `cmdk` (ja instalado) para busca dentro do dropdown
-- O dropdown tera `bg-popover` solido e `z-50` para nao ficar transparente
+- Adicionar `className="relative z-[110]"` ao `motion.div` que envolve o `PortfolioFilters` (linha 46), garantindo que a barra de filtros e seu dropdown fiquem sempre acima dos cards com hover.
 
-### Arquivo: `src/components/PortfolioFilters.tsx` (novo)
+## Bug 2: Pesquisa global nao mostra estado vazio
 
-Componente dedicado que recebe as categorias extraidas dinamicamente dos projetos e expoe:
-- `searchQuery` (string) -- filtra por texto em titulo/descricao/tags
-- `activeCategory` (string) -- filtra por categoria
-- Logica: categorias ordenadas por frequencia, as 4 primeiras expostas, restantes no combobox
+Pela screenshot, parece que a busca dentro do combobox "Mais" (que e apenas para filtrar categorias) esta sendo confundida com a busca global. O estado vazio ja existe no codigo (linhas 61-96) e deveria funcionar. O problema pode ser que a busca global (input principal) nao esta visivel ou acessivel por causa do z-index.
 
-### Arquivo: `src/components/PortfolioSection.tsx` (editar)
+A correcao do z-index (Bug 1) deve resolver a acessibilidade do input de busca. Tambem vou verificar que o estado vazio esta renderizando corretamente quando `filtered.length === 0`.
 
-- Substituir o bloco de botoes de filtro pelo novo `PortfolioFilters`
-- Adicionar logica de busca textual ao `useMemo` de filtragem (busca em `title`, `description`, `tags`)
-
-## 2. Borda gradiente animada nos cards ao hover
-
-### Arquivo: `src/components/PortfolioCard.tsx` (editar)
-
-- Adicionar um wrapper `div` com `padding: 1px` e `background: transparent` no estado normal
-- No hover (`group-hover`), o background do wrapper vira o gradiente da marca (purple -> blue -> cyan) via classe CSS
-- Adicionar animacao de rotacao do gradiente usando `@keyframes` para efeito sutil de movimento
-
-### Arquivo: `src/index.css` (editar)
-
-- Adicionar keyframe `gradient-rotate` que anima o `background-position` ou `angle` do gradiente
-- Classe utilitaria `.gradient-border-animated` para reutilizacao
-
-## 3. Melhorias de contraste e WCAG AA
-
-### Arquivo: `src/components/PortfolioCard.tsx` (editar)
-
-Problemas atuais de contraste:
-- **Titulo**: `text-foreground` com `font-light` sobre overlay semi-transparente -- pouco contraste. Mudar para `font-normal` (peso 400 minimo)
-- **Descricao**: `text-muted-foreground` com `text-[11px]` -- muito pequeno e baixo contraste. Aumentar para `text-xs` e usar `text-foreground/70` (ratio melhor)
-- **Tags no hover**: `text-muted-foreground` com `text-[10px]` sobre overlay -- subir para `text-foreground/60` e `text-[11px]`
-- **CTA "Ver projeto"**: `text-accent` esta ok (cyan e vibrante), manter
-- **Overlay base**: Aumentar opacidade minima de `opacity-60` para `opacity-70` para garantir que o texto sempre tenha fundo suficiente
-
-### Arquivo: `src/index.css` (verificar)
-
-- `--muted-foreground: 215 20% 55%` -- contrast ratio contra `--background: 240 20% 4%` e ~4.2:1 (passa AA para texto grande, falha para pequeno). Para texto `text-[10px]` e `text-[11px]` isso falha WCAG AA
-- Nao vou alterar a variavel global (afetaria todo o site), mas nos cards especificamente usar cores com ratio maior
-
-## Resumo tecnico dos arquivos
+## Resumo
 
 | Arquivo | Acao |
 |---|---|
-| `src/components/PortfolioFilters.tsx` | Criar -- barra de busca + chips de categoria + combobox |
-| `src/components/PortfolioSection.tsx` | Editar -- integrar PortfolioFilters, logica de busca textual |
-| `src/components/PortfolioCard.tsx` | Editar -- borda gradiente animada, melhorias de contraste |
-| `src/index.css` | Editar -- keyframe de animacao do gradiente |
+| `src/components/PortfolioSection.tsx` | Adicionar `relative z-[110]` ao wrapper dos filtros |
+
+Correcao simples e cirurgica -- apenas o z-index do container de filtros precisa ser elevado acima do `zIndex: 100` dos cards em hover.
 
