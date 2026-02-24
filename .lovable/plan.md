@@ -1,54 +1,115 @@
 
 
-# Efeito "Venom" + Constelações do Zodíaco
+# Portfolio -- Mockup de Notebook (Desktop) e Smartphone (Mobile)
 
-## Resumo
-Ajustar a física das partículas para atração agressiva ao mouse (estilo Venom) com soltura rápida, e posicionar as partículas iniciais formando as 12 constelações do zodíaco distribuídas pela tela.
+## Conceito
+Substituir a seção de projetos atual por uma experiência imersiva: no desktop, os projetos aparecem dentro de um notebook CSS puro; no mobile, dentro de um smartphone CSS puro. Ambos com barra de busca, filtros por categoria e grid de projetos com hover interativo.
 
-## Mudanças em `src/components/NetworkParticles.tsx`
+## Arquivos a criar/modificar
 
-### 1. Constelações do Zodíaco como posições iniciais
+### 1. Novo: `src/components/PortfolioSection.tsx`
+Componente principal que substitui `ProjectsSection` na `Index.tsx`.
 
-Definir um mapa de coordenadas normalizadas (0-1) para cada uma das 12 constelações:
-- Áries, Touro, Gêmeos, Câncer, Leão, Virgem, Libra, Escorpião, Sagitário, Capricórnio, Aquário, Peixes
-- Cada constelação terá entre 4-8 estrelas (pontos) posicionadas de acordo com o formato real da constelação
-- As 12 constelações serão distribuídas em grid pela tela (4 colunas x 3 linhas, por exemplo)
-- Coordenadas normalizadas escaladas para o tamanho real do canvas
-- Total de partículas será a soma dos pontos de todas as constelações (~60-90 pontos no desktop, reduzido no mobile mostrando apenas 6 constelações)
+**Estrutura:**
+- Titulo + subtitulo da secao (acima do mockup)
+- Componente `<DeviceMockup>` que renderiza notebook ou smartphone baseado no breakpoint
+- Dentro do mockup: barra de busca + chips de categoria + grid de projetos
 
-As partículas começam nas posições das estrelas e depois se movem livremente com a física normal -- formando brevemente as constelações antes de se dispersarem.
+### 2. Novo: `src/components/DeviceMockup.tsx`
+Renderiza o frame do dispositivo em CSS puro.
 
-### 2. Física "Venom" -- atração rápida, soltura rápida
+**Desktop -- Notebook:**
+- Tela com borda arredondada top, fundo escuro (`bg-card`)
+- Barra superior estilo macOS: 3 bolinhas (vermelho, amarelo, verde) + titulo "Portfolio"
+- Area de conteudo interna com scroll se necessario
+- Base/hinge do notebook: retangulo fino abaixo da tela com gradiente sutil
 
-- **Força de atração**: aumentar de `0.4 / dist` para `2.0 / dist`
-- **MOUSE_RADIUS**: aumentar de `150` para `200`
-- **Distância mínima**: reduzir de `5` para `3`
-- **Damping condicional**:
-  - Dentro do raio do mouse: `*= 0.98` (fluido, permite correr até o cursor)
-  - Fora do raio: `*= 0.92` (freia rápido, solta as partículas imediatamente)
-- **Velocidade máxima**: aumentar clamp de `1.5` para `4.0`
+**Mobile -- Smartphone:**
+- Frame retangular com bordas bem arredondadas (border-radius ~40px)
+- Notch ou dynamic island no topo (pill shape central)
+- Home indicator na base (barrinha fina)
+- Mesma area de conteudo interna
 
-### 3. Dados das constelações
+**Responsividade:**
+- `useIsMobile()` hook existente para alternar entre os dois frames
+- Notebook ocupa ~90% da largura da secao (max-width ~1100px)
+- Smartphone ocupa ~320px de largura, centralizado
 
-Estrutura de dados com coordenadas relativas para cada signo (exemplo simplificado):
+### 3. Novo: `src/components/PortfolioGrid.tsx`
+Conteudo interno do mockup (igual para ambos os devices).
 
+**Header interno:**
+- Input de busca com icone de lupa (filtra por titulo/descricao)
+- Chips de categoria extraidos dinamicamente das tags dos projetos: [Todos] [E-commerce] [SaaS] [Fintech] [EdTech] etc.
+- Chip ativo tem `gradient-bg`, inativos tem `bg-muted`
+
+**Grid de projetos:**
+- Desktop: 3 colunas (33/33/33) com gap
+- Mobile (dentro do smartphone): 1 coluna
+- Cada item e uma thumbnail (imagem do projeto em `aspect-video`)
+- **Hover effect**: overlay escuro com fade-in mostrando:
+  - Titulo do projeto (bold, branco)
+  - Descricao curta (1 linha, muted)
+  - Tags como badges pequenos
+  - Icone de seta (ArrowUpRight) no canto
+- Click leva para `/projeto/:slug` (mesmo comportamento atual)
+
+### 4. Modificar: `src/pages/Index.tsx`
+- Trocar `<ProjectsSection />` por `<PortfolioSection />`
+
+### 5. Modificar: `src/index.css`
+- Adicionar animacao sutil de entrada para o mockup (fade-in + leve translate-y)
+
+## Detalhes Tecnicos
+
+**CSS do Notebook (desktop):**
 ```text
-ARIES:     5 estrelas formando o "V" característico
-TAURUS:    7 estrelas formando o "V" das Híades + chifres
-GEMINI:    6 estrelas dos gêmeos lado a lado
-CANCER:    5 estrelas em forma de "Y" invertido
-LEO:       8 estrelas com a foice e o triângulo
-VIRGO:     7 estrelas em linha angulada
-LIBRA:     5 estrelas formando a balança
-SCORPIO:   8 estrelas com a cauda curva
-SAGITTARIUS: 7 estrelas com o arco
-CAPRICORN: 6 estrelas em triângulo alongado
-AQUARIUS:  6 estrelas em zigue-zague
-PISCES:    6 estrelas em "V" conectado
+Tela:
+  - rounded-t-xl, border border-border/50
+  - bg-[hsl(240,15%,6%)] (mais escuro que o card, simular tela)
+  - shadow-2xl com sombra purple sutil
+  - aspect-ratio ~16/10
+
+Barra superior (dentro da tela):
+  - h-8, bg-muted/50, flex items-center, px-3
+  - 3 divs circulares (w-3 h-3 rounded-full) com cores red, yellow, green
+
+Base/hinge:
+  - w-[110%] centralizado, h-3, rounded-b-xl
+  - gradient-bg com opacity baixa
 ```
 
-As constelações são dispostas em uma grade pela viewport, cada uma ocupando uma célula, com leve randomização na posição para parecer natural.
+**CSS do Smartphone (mobile):**
+```text
+Frame:
+  - rounded-[40px], border-[3px] border-muted
+  - bg-[hsl(240,15%,6%)]
+  - shadow-2xl
+  - p-2 (espaco interno entre frame e tela)
 
-## Arquivo alterado
-- `src/components/NetworkParticles.tsx`
+Notch:
+  - div centralizado no topo, w-24 h-5, rounded-full, bg-muted
+
+Home indicator:
+  - div centralizado na base, w-32 h-1, rounded-full, bg-muted/50
+```
+
+**Filtragem:**
+- Estado local com `useState` para categoria selecionada e termo de busca
+- `useMemo` para filtrar projetos
+- Categorias unicas extraidas com `Set` das tags de todos os projetos
+
+**Animacoes:**
+- Framer Motion para entrada do mockup (viewport-triggered)
+- Hover nos cards com `transition-all duration-300`
+- Chips de categoria com transicao suave de cor
+
+## Componentes existentes reutilizados
+- `useIsMobile()` de `src/hooks/use-mobile.tsx`
+- Dados de `src/data/projects.ts`
+- Classes utilitarias `gradient-text`, `gradient-bg` do CSS existente
+- `Link` do react-router-dom para navegacao
+
+## Resultado esperado
+Uma secao de portfolio que parece uma janela real de browser/app, dando contexto visual ao trabalho apresentado. No desktop, um notebook elegante com 3 colunas. No mobile, um smartphone com scroll vertical de 1 coluna. Busca e filtros funcionais.
 
