@@ -15,6 +15,22 @@ interface Particle {
   colorIdx: number;
 }
 
+// Zodiac constellations — normalized coordinates (0-1) for each star
+const CONSTELLATIONS: { name: string; stars: [number, number][] }[] = [
+  { name: "Aries", stars: [[0.5,0.2],[0.4,0.4],[0.35,0.6],[0.6,0.4],[0.65,0.6]] },
+  { name: "Taurus", stars: [[0.3,0.3],[0.4,0.4],[0.5,0.5],[0.6,0.4],[0.7,0.3],[0.45,0.65],[0.55,0.65]] },
+  { name: "Gemini", stars: [[0.3,0.2],[0.3,0.5],[0.3,0.8],[0.7,0.2],[0.7,0.5],[0.7,0.8]] },
+  { name: "Cancer", stars: [[0.5,0.2],[0.35,0.45],[0.65,0.45],[0.4,0.7],[0.6,0.7]] },
+  { name: "Leo", stars: [[0.3,0.3],[0.4,0.2],[0.5,0.3],[0.55,0.45],[0.5,0.6],[0.6,0.7],[0.7,0.6],[0.75,0.75]] },
+  { name: "Virgo", stars: [[0.2,0.3],[0.35,0.25],[0.5,0.35],[0.6,0.5],[0.5,0.65],[0.7,0.7],[0.4,0.8]] },
+  { name: "Libra", stars: [[0.5,0.2],[0.3,0.5],[0.7,0.5],[0.35,0.75],[0.65,0.75]] },
+  { name: "Scorpio", stars: [[0.15,0.4],[0.25,0.35],[0.35,0.4],[0.45,0.5],[0.55,0.6],[0.65,0.7],[0.75,0.65],[0.8,0.55]] },
+  { name: "Sagittarius", stars: [[0.3,0.7],[0.4,0.55],[0.5,0.4],[0.6,0.3],[0.55,0.55],[0.65,0.65],[0.7,0.5]] },
+  { name: "Capricorn", stars: [[0.3,0.3],[0.45,0.25],[0.6,0.35],[0.7,0.5],[0.55,0.65],[0.4,0.7]] },
+  { name: "Aquarius", stars: [[0.2,0.4],[0.35,0.3],[0.5,0.45],[0.6,0.35],[0.75,0.5],[0.85,0.4]] },
+  { name: "Pisces", stars: [[0.3,0.3],[0.4,0.45],[0.5,0.55],[0.6,0.45],[0.7,0.3],[0.5,0.7]] },
+];
+
 const NetworkParticles = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: -9999, y: -9999 });
@@ -37,24 +53,44 @@ const NetworkParticles = () => {
 
     const initParticles = () => {
       const rect = canvas.getBoundingClientRect();
-      const count = rect.width < 768 ? 50 : 100;
-      particlesRef.current = Array.from({ length: count }, () => ({
-        x: Math.random() * rect.width,
-        y: Math.random() * rect.height,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        radius: 1.5 + Math.random(),
-        colorIdx: Math.floor(Math.random() * 3),
-      }));
+      const isMobile = rect.width < 768;
+      const activeConstellations = isMobile
+        ? CONSTELLATIONS.filter((_, i) => i % 2 === 0) // 6 on mobile
+        : CONSTELLATIONS;
+
+      const cols = isMobile ? 3 : 4;
+      const rows = Math.ceil(activeConstellations.length / cols);
+      const cellW = rect.width / cols;
+      const cellH = rect.height / rows;
+      const scale = Math.min(cellW, cellH) * 0.6;
+
+      const particles: Particle[] = [];
+
+      activeConstellations.forEach((constellation, idx) => {
+        const col = idx % cols;
+        const row = Math.floor(idx / cols);
+        const cx = cellW * (col + 0.5);
+        const cy = cellH * (row + 0.5);
+
+        constellation.stars.forEach(([sx, sy]) => {
+          particles.push({
+            x: cx + (sx - 0.5) * scale + (Math.random() - 0.5) * 4,
+            y: cy + (sy - 0.5) * scale + (Math.random() - 0.5) * 4,
+            vx: 0,
+            vy: 0,
+            radius: 1.5 + Math.random(),
+            colorIdx: Math.floor(Math.random() * 3),
+          });
+        });
+      });
+
+      particlesRef.current = particles;
     };
 
     resize();
     initParticles();
 
-    const onResize = () => {
-      resize();
-      initParticles();
-    };
+    const onResize = () => { resize(); initParticles(); };
     window.addEventListener("resize", onResize);
 
     const onMouse = (e: MouseEvent) => {
@@ -63,13 +99,11 @@ const NetworkParticles = () => {
     };
     window.addEventListener("mousemove", onMouse);
 
-    const onLeave = () => {
-      mouseRef.current = { x: -9999, y: -9999 };
-    };
+    const onLeave = () => { mouseRef.current = { x: -9999, y: -9999 }; };
     window.addEventListener("mouseleave", onLeave);
 
     const MAX_DIST = 150;
-    const MOUSE_RADIUS = 150;
+    const MOUSE_RADIUS = 200;
 
     const animate = () => {
       const rect = canvas.getBoundingClientRect();
@@ -80,33 +114,33 @@ const NetworkParticles = () => {
       const particles = particlesRef.current;
       const mouse = mouseRef.current;
 
-      // Update positions
       for (const p of particles) {
-        // Mouse interaction — attract toward cursor
         const dx = mouse.x - p.x;
         const dy = mouse.y - p.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < MOUSE_RADIUS && dist > 5) {
-          const force = 0.4 / dist;
+        const inRadius = dist < MOUSE_RADIUS && dist > 3;
+
+        if (inRadius) {
+          const force = 2.0 / dist;
           p.vx += (dx / dist) * force;
           p.vy += (dy / dist) * force;
+          p.vx *= 0.98;
+          p.vy *= 0.98;
+        } else {
+          p.vx *= 0.92;
+          p.vy *= 0.92;
         }
-
-        // Dampen
-        p.vx *= 0.99;
-        p.vy *= 0.99;
 
         // Clamp speed
         const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-        if (speed > 1.5) {
-          p.vx = (p.vx / speed) * 1.5;
-          p.vy = (p.vy / speed) * 1.5;
+        if (speed > 4.0) {
+          p.vx = (p.vx / speed) * 4.0;
+          p.vy = (p.vy / speed) * 4.0;
         }
 
         p.x += p.vx;
         p.y += p.vy;
 
-        // Bounce
         if (p.x < 0) { p.x = 0; p.vx *= -1; }
         if (p.x > w) { p.x = w; p.vx *= -1; }
         if (p.y < 0) { p.y = 0; p.vy *= -1; }
