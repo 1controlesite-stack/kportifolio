@@ -1,43 +1,19 @@
 
-# Auditoria e Correcao das Animacoes de Hover nos Cards
 
-## Problema Identificado
+# Corrigir z-index no Hover dos Cards Sobrepostos
 
-O hover tem animacoes descoordenadas que criam um efeito em "passos":
+## Problema
 
-1. **Imagem**: `scale-105` com `duration-500` (sem delay)
-2. **Overlay**: `opacity-0 -> opacity-90` com `duration-400` (sem delay)
-3. **Container de conteudo**: `translate-y-2 -> translate-y-0` com `duration-400` (sem delay)
-4. **Tags**: `opacity` com `duration-300 delay-75`
-5. **Titulo**: `opacity` com `duration-300 delay-75`
-6. **Descricao**: `opacity` com `duration-300 delay-100`
-7. **CTA**: `opacity` com `duration-300 delay-150`
-8. **Borda gradiente** (CSS): `transition: background 0.4s ease` + animacao de gradient-rotate
-
-Sao 7+ transicoes com timings diferentes, resultando no efeito escalonado.
+Os cards usam `whileHover={{ zIndex: 100, scale: 1.03 }}` do Framer Motion (linha 118 do `PortfolioSection.tsx`). O Framer Motion **interpola numericamente** o `zIndex` (ex: de 1 para 2, 3, 4... ate 100), o que faz o card demorar para aparecer acima dos vizinhos sobrepostos. O scale tambem anima gradualmente, criando a sensacao de "passos".
 
 ## Solucao
 
-Unificar os timings para que tudo aconteca de forma coesa, com uma unica "onda" suave:
+### Arquivo: `src/components/PortfolioSection.tsx` (linha 105-121)
 
-### Arquivo: `src/components/PortfolioCard.tsx`
+1. **Remover `zIndex` do `whileHover`** do Framer Motion -- ele nao deve ser animado gradualmente
+2. **Adicionar classes CSS** no `motion.div` para controlar o z-index instantaneamente via `hover:z-[100]`
+3. **Manter `scale: 1.03`** no `whileHover` mas com `transition` rapida e sem spring
+4. Adicionar `transition-[z-index] duration-0` via CSS para garantir mudanca instantanea
 
-| Elemento | Antes | Depois |
-|----------|-------|--------|
-| Imagem (scale) | `duration-500` | `duration-500 ease-out` |
-| Overlay | `duration-400` | `duration-500 ease-out` |
-| Container conteudo (translate) | `duration-400` | `duration-500 ease-out` |
-| Tags | `duration-300 delay-75` | `duration-500 ease-out` (sem delay) |
-| Titulo | `duration-300 delay-75` | `duration-500 ease-out` (sem delay) |
-| Descricao | `duration-300 delay-100` | `duration-500 ease-out` (sem delay) |
-| CTA | `duration-300 delay-150` | `duration-500 ease-out` (sem delay) |
+Resultado: o z-index muda imediatamente no hover (CSS), enquanto o scale anima suavemente (Framer Motion). O card sobreposto aparece por cima dos vizinhos sem atraso.
 
-### Arquivo: `src/index.css`
-
-- Ajustar `.gradient-border-animated` para usar `transition: background 0.5s ease-out` (alinhado com os 500ms)
-
-### Resumo
-
-- Todas as transicoes passam a ter `duration-500 ease-out`
-- Remover todos os `delay-*` dos elementos internos
-- Isso faz com que overlay, conteudo, e zoom da imagem acontecam em sincronia, criando um unico movimento fluido em vez de passos separados
