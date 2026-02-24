@@ -104,7 +104,7 @@ const PortfolioSection = () => {
               return (
                 <motion.div
                   key={project.slug}
-                  className="relative"
+                  className="relative hover:z-[100] transition-none"
                   style={{
                     zIndex,
                     ...(col === 0
@@ -115,7 +115,7 @@ const PortfolioSection = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.08 }}
-                  whileHover={{ zIndex: 100, scale: 1.03 }}
+                  whileHover={{ scale: 1.03 }}
                 >
                   <PortfolioCard project={project} />
                 </motion.div>
