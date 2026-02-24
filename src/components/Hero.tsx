@@ -79,13 +79,6 @@ const Hero = () => {
           <ChevronDown className="w-6 h-6 animate-scroll-hint" />
         </motion.div>
 
-        {/* Transition gradient — fades to light section */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-[15vh] z-20 pointer-events-none"
-          style={{
-            background: "linear-gradient(to bottom, transparent, hsl(var(--background)))",
-          }}
-        />
       </div>
     </section>
   );

@@ -20,9 +20,9 @@ const SectionTransition = () => {
   // Beams: scaleX 0→1 over 0–0.4
   const beamScale = useTransform(scrollYProgress, [0, 0.4], [0, 1]);
 
-  // Flash: opacity bell curve 0.35–0.5
-  const flashOpacity = useTransform(scrollYProgress, [0.3, 0.4, 0.5], [0, 0.8, 0]);
-  const flashScale = useTransform(scrollYProgress, [0.3, 0.5], [0.3, 2.5]);
+  // Flash: tight burst only at impact
+  const flashOpacity = useTransform(scrollYProgress, [0.38, 0.4, 0.45], [0, 0.9, 0]);
+  const flashScale = useTransform(scrollYProgress, [0.38, 0.45], [0.5, 3.5]);
 
   // Clip-path reveal: 0.4–0.8
   const clipRadius = useTransform(scrollYProgress, [0.4, 0.8], [0, 150]);
@@ -36,8 +36,8 @@ const SectionTransition = () => {
   return (
     <section
       ref={ref}
-      className="relative min-h-[50vh] overflow-hidden"
-      style={{ backgroundColor: "hsl(var(--background))" }}
+      className="relative min-h-[50vh] z-30"
+      style={{ marginTop: "-25vh", marginBottom: "-25vh", backgroundColor: "transparent" }}
     >
       {/* Light reveal layer */}
       <motion.div
@@ -81,10 +81,10 @@ const SectionTransition = () => {
 
       {/* Central flash */}
       <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full pointer-events-none"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] rounded-full pointer-events-none"
         style={{
           background:
-            "radial-gradient(circle, hsl(0 0% 100% / 0.9), hsl(var(--kenkya-blue) / 0.5) 40%, transparent 70%)",
+            "radial-gradient(circle, hsl(0 0% 100% / 0.95) 0%, hsl(var(--kenkya-blue) / 0.6) 30%, transparent 55%)",
           opacity: flashOpacity,
           scale: flashScale,
         }}
