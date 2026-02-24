@@ -1,30 +1,23 @@
 
+# Corrigir Proporcao dos Cards no Grid
 
-# Corrigir Exibicao das Imagens no Portfolio
-
-## Problemas Identificados
-
-1. **`aspect-[16/10]`** no container forca uma proporcao fixa, cortando imagens que nao tem essa proporcao exata
-2. **`object-cover`** na tag `img` faz a imagem preencher o container cortando o excesso
-3. **`overflow-hidden`** no container esconde as partes cortadas
-
-Isso causa dois efeitos indesejados: imagens cortadas e desalinhamento vertical entre cards da mesma linha (a primeira imagem pode parecer "mais acima" por ter proporcao diferente).
+## Problema
+As 3 imagens de showcase (`ana-ferreira.jpg`, `inspira-yoga.jpg`, `mecanica-mt.jpg`) tem proporcoes ligeiramente diferentes entre si. Como cada card usa `h-auto` (altura natural da imagem), cards com imagens mais altas ficam maiores que os outros na mesma linha, causando desalinhamento visual.
 
 ## Solucao
 
-### Arquivo: `src/components/PortfolioCard.tsx`
+### `src/components/PortfolioCard.tsx`
+- Adicionar um container com `aspect-[4/3]` (ou a proporcao que melhor se encaixe nas imagens de showcase)
+- Usar `object-contain` na imagem para que ela apareca 100% sem cortes, centralizada dentro do container
+- Adicionar `bg-transparent` ou `bg-background` no container para que o espaco vazio (se houver) nao fique branco
+- Isso garante que todos os cards tenham exatamente a mesma altura, independente da proporcao original da imagem
 
-- Remover o `aspect-[16/10]` fixo do container
-- Trocar `object-cover` por `object-contain` (ou simplesmente usar a imagem sem restricao de tamanho)
-- Manter `w-full` e deixar a altura ser determinada pela proporcao natural da imagem
-- Remover `overflow-hidden` do container interno (manter apenas no Link externo para o rounded)
-- Adicionar `items-end` ou alinhar os cards pelo fundo no grid para que fiquem nivelados na mesma linha
+### Detalhes tecnicos
+```text
+Antes:  <img class="w-full h-auto block" />
+Depois: <div class="aspect-[4/3]">
+          <img class="w-full h-full object-contain" />
+        </div>
+```
 
-### Arquivo: `src/components/PortfolioSection.tsx`
-
-- Adicionar `items-end` no grid para que todos os cards de cada linha se alinhem pela base, evitando o efeito de "primeiro card mais acima"
-
-## Resultado Esperado
-
-Todas as imagens aparecem 100% sem cortes, e os cards de cada linha ficam alinhados pela base.
-
+Todas as imagens aparecem inteiras (sem corte) e todos os cards ficam com a mesma proporcao, eliminando o desalinhamento entre o primeiro card e os demais.
