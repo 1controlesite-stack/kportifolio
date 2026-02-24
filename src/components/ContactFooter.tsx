@@ -21,7 +21,20 @@ const links = [
 
 const ContactFooter = () => {
   return (
-    <footer className="relative py-20 md:py-28 px-4 overflow-hidden">
+    <footer className="relative pt-24 pb-20 md:pt-32 md:pb-28 px-4 overflow-hidden">
+      {/* Top glow accent */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-[1px] pointer-events-none"
+        style={{
+          background: "linear-gradient(90deg, transparent, hsl(var(--kenkya-purple) / 0.4), hsl(var(--kenkya-blue) / 0.5), hsl(var(--kenkya-cyan) / 0.4), transparent)",
+        }}
+      />
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-24 pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse at top, hsl(var(--kenkya-blue) / 0.06) 0%, transparent 70%)",
+        }}
+      />
       {/* Gradient background */}
       <div className="absolute inset-0 gradient-bg opacity-[0.08]" />
 
