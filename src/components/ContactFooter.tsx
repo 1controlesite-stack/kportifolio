@@ -1,26 +1,21 @@
 import { motion } from "framer-motion";
-import { Mail, MessageCircle, Linkedin, Github } from "lucide-react";
+import { Mail, MessageCircle, Instagram } from "lucide-react";
 
 const links = [
   {
     icon: MessageCircle,
     label: "WhatsApp",
-    href: "https://wa.me/5500000000000",
+    href: "https://wa.me/5516991962010",
   },
   {
     icon: Mail,
     label: "Email",
-    href: "mailto:contato@kenkya.com.br",
+    href: "mailto:kenkyasites@gmail.com",
   },
   {
-    icon: Linkedin,
-    label: "LinkedIn",
-    href: "https://linkedin.com/company/kenkya",
-  },
-  {
-    icon: Github,
-    label: "GitHub",
-    href: "https://github.com/kenkya",
+    icon: Instagram,
+    label: "Instagram",
+    href: "https://instagram.com/kenkya_",
   },
 ];
 
@@ -38,7 +33,7 @@ const ContactFooter = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          Vamos conversar?
+          Vamos criar algo EXTRAORDINÁRIO?
         </motion.h2>
 
         <motion.p
@@ -79,7 +74,16 @@ const ContactFooter = () => {
 
         <div className="mt-16 pt-8 border-t border-border">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Kenkya. Todos os direitos reservados.
+            © {new Date().getFullYear()} Kenkya. Todos os direitos reservados. |{" "}
+            Feito por{" "}
+            <a
+              href="https://kenkya.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground hover:text-primary transition-colors underline underline-offset-2"
+            >
+              Kenkya
+            </a>
           </p>
         </div>
       </div>
