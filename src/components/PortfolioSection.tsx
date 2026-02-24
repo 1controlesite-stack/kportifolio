@@ -44,6 +44,7 @@ const PortfolioSection = () => {
 
         {/* Filters */}
         <motion.div
+          className="relative z-[110]"
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
