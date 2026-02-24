@@ -2,17 +2,20 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import ImageUpload from "@/components/ImageUpload";
+import FileUpload from "@/components/FileUpload";
 import {
   useAdminProject, useCreateProject, useUpdateProject,
 } from "@/hooks/useAdminProjects";
+import { useCategories } from "@/hooks/useAdminCategories";
+import { useProjectCategories, useSaveProjectCategories } from "@/hooks/useAdminProjects";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -20,14 +23,12 @@ const schema = z.object({
   title: z.string().min(1, "Título obrigatório"),
   slug: z.string().min(1, "Slug obrigatório"),
   description: z.string().min(1, "Descrição obrigatória"),
-  tags: z.string().min(1, "Tags obrigatórias"),
   image: z.string().url("URL inválida"),
   showcase_image: z.string().optional(),
   live_url: z.string().optional(),
-  challenge: z.string().min(1, "Obrigatório"),
-  process: z.string().min(1, "Obrigatório"),
-  solution: z.string().min(1, "Obrigatório"),
-  result: z.string().min(1, "Obrigatório"),
+  testimonial_text: z.string().optional(),
+  testimonial_image: z.string().optional(),
+  testimonial_audio: z.string().optional(),
   published: z.boolean(),
   display_order: z.number(),
 });
@@ -64,15 +65,21 @@ const AdminProjectForm = ({ projectId, onBack }: AdminProjectFormProps) => {
   const { data: existing, isLoading } = useAdminProject(projectId);
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
+  const { data: allCategories = [] } = useCategories();
+  const { data: projectCategoryIds = [] } = useProjectCategories(projectId);
+  const saveProjectCategories = useSaveProjectCategories();
+
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
 
   const {
     register, handleSubmit, setValue, watch, reset, formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      title: "", slug: "", description: "", tags: "", image: "",
-      showcase_image: "", live_url: "", challenge: "", process: "",
-      solution: "", result: "", published: false, display_order: 0,
+      title: "", slug: "", description: "", image: "",
+      showcase_image: "", live_url: "",
+      testimonial_text: "", testimonial_image: "", testimonial_audio: "",
+      published: false, display_order: 0,
     },
   });
 
@@ -82,40 +89,59 @@ const AdminProjectForm = ({ projectId, onBack }: AdminProjectFormProps) => {
         title: existing.title,
         slug: existing.slug,
         description: existing.description,
-        tags: existing.tags.join(", "),
         image: existing.image,
         showcase_image: existing.showcase_image ?? "",
         live_url: existing.live_url ?? "",
-        challenge: existing.challenge,
-        process: existing.process,
-        solution: existing.solution,
-        result: existing.result,
+        testimonial_text: existing.testimonial_text ?? "",
+        testimonial_image: existing.testimonial_image ?? "",
+        testimonial_audio: existing.testimonial_audio ?? "",
         published: existing.published,
         display_order: existing.display_order,
       });
     }
   }, [existing, reset]);
 
+  useEffect(() => {
+    if (projectCategoryIds.length > 0) {
+      setSelectedCategoryIds(projectCategoryIds);
+    }
+  }, [projectCategoryIds]);
+
+  const toggleCategory = (id: string) => {
+    setSelectedCategoryIds((prev) => {
+      if (prev.includes(id)) return prev.filter((c) => c !== id);
+      if (prev.length >= 3) {
+        toast.error("Máximo de 3 categorias por projeto");
+        return prev;
+      }
+      return [...prev, id];
+    });
+  };
+
   const onSubmit = async (data: FormData) => {
-    const tagsArray = data.tags.split(",").map((t) => t.trim()).filter(Boolean);
     const payload = {
       title: data.title, slug: data.slug, description: data.description,
-      tags: tagsArray, image: data.image,
+      image: data.image,
       showcase_image: data.showcase_image || null,
       live_url: data.live_url || null,
-      challenge: data.challenge, process: data.process,
-      solution: data.solution, result: data.result,
+      testimonial_text: data.testimonial_text || null,
+      testimonial_image: data.testimonial_image || null,
+      testimonial_audio: data.testimonial_audio || null,
       published: data.published, display_order: data.display_order,
     };
 
     try {
+      let id = projectId;
       if (projectId) {
         await updateProject.mutateAsync({ id: projectId, ...payload });
-        toast.success("Projeto atualizado!");
       } else {
-        await createProject.mutateAsync(payload);
-        toast.success("Projeto criado!");
+        const created = await createProject.mutateAsync(payload);
+        id = created.id;
       }
+      if (id) {
+        await saveProjectCategories.mutateAsync({ projectId: id, categoryIds: selectedCategoryIds });
+      }
+      toast.success(projectId ? "Projeto atualizado!" : "Projeto criado!");
       onBack();
     } catch (err: any) {
       toast.error(err.message || "Erro ao salvar");
@@ -140,7 +166,6 @@ const AdminProjectForm = ({ projectId, onBack }: AdminProjectFormProps) => {
       </h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-2xl">
-        {/* Informações básicas */}
         <Section title="Informações básicas">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -159,84 +184,92 @@ const AdminProjectForm = ({ projectId, onBack }: AdminProjectFormProps) => {
             <Textarea {...register("description")} />
             {errors.description && <p className="text-xs text-destructive mt-1">{errors.description.message}</p>}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label>Tags (separadas por vírgula)</Label>
-              <Input {...register("tags")} placeholder="E-commerce, Branding" />
-            </div>
-            <div>
-              <Label>Ordem de exibição</Label>
-              <Input type="number" {...register("display_order", { valueAsNumber: true })} />
-            </div>
-          </div>
         </Section>
 
-        {/* Mídia */}
         <Section title="Mídia">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <ImageUpload
-                label="Imagem principal"
-                value={watch("image")}
-                onUpload={(url) => setValue("image", url, { shouldValidate: true })}
-              />
-              {errors.image && <p className="text-xs text-destructive mt-1">{errors.image.message}</p>}
-            </div>
-            <div>
-              <ImageUpload
-                label="Imagem showcase (opcional)"
-                value={watch("showcase_image")}
-                onUpload={(url) => setValue("showcase_image", url)}
-              />
-            </div>
+            <FileUpload
+              label="Imagem principal (portfólio)"
+              value={watch("image")}
+              onUpload={(url) => setValue("image", url, { shouldValidate: true })}
+            />
+            <FileUpload
+              label="Imagem showcase (página do projeto)"
+              value={watch("showcase_image")}
+              onUpload={(url) => setValue("showcase_image", url)}
+            />
           </div>
+          {errors.image && <p className="text-xs text-destructive mt-1">{errors.image.message}</p>}
+        </Section>
+
+        <Section title="Categorias">
+          <p className="text-xs text-muted-foreground mb-2">Selecione até 3 categorias</p>
+          <div className="flex flex-wrap gap-2">
+            {allCategories.map((cat) => {
+              const selected = selectedCategoryIds.includes(cat.id);
+              return (
+                <Badge
+                  key={cat.id}
+                  variant={selected ? "default" : "outline"}
+                  className={cn(
+                    "cursor-pointer transition-colors",
+                    selected && "bg-primary text-primary-foreground"
+                  )}
+                  onClick={() => toggleCategory(cat.id)}
+                >
+                  {cat.name}
+                  {selected && <X className="w-3 h-3 ml-1" />}
+                </Badge>
+              );
+            })}
+            {allCategories.length === 0 && (
+              <p className="text-sm text-muted-foreground">Crie categorias primeiro no menu "Categorias".</p>
+            )}
+          </div>
+        </Section>
+
+        <Section title="URL">
           <div>
             <Label>URL ao vivo (opcional)</Label>
-            <Input {...register("live_url")} />
+            <Input {...register("live_url")} placeholder="https://..." />
           </div>
         </Section>
 
-        {/* Conteúdo do Case */}
-        <Section title="Conteúdo do case">
+        <Section title="Depoimento do cliente" defaultOpen={false}>
           <div>
-            <Label>O Desafio</Label>
-            <Textarea {...register("challenge")} rows={3} />
-            {errors.challenge && <p className="text-xs text-destructive mt-1">{errors.challenge.message}</p>}
+            <Label>Texto do depoimento</Label>
+            <Textarea {...register("testimonial_text")} rows={3} placeholder="O que o cliente disse..." />
           </div>
-          <div>
-            <Label>O Processo</Label>
-            <Textarea {...register("process")} rows={3} />
-          </div>
-          <div>
-            <Label>A Solução</Label>
-            <Textarea {...register("solution")} rows={3} />
-          </div>
-          <div>
-            <Label>O Resultado</Label>
-            <Textarea {...register("result")} rows={3} />
-          </div>
+          <FileUpload
+            label="Imagem do depoimento"
+            value={watch("testimonial_image")}
+            onUpload={(url) => setValue("testimonial_image", url)}
+          />
+          <FileUpload
+            label="Áudio do depoimento (OGG/MP3)"
+            value={watch("testimonial_audio")}
+            onUpload={(url) => setValue("testimonial_audio", url)}
+            type="audio"
+            accept="audio/ogg,audio/mpeg,audio/mp3,audio/*"
+          />
         </Section>
 
-        {/* Configurações */}
         <Section title="Configurações" defaultOpen={false}>
           <div className="flex items-center gap-3">
-            <Switch
-              checked={published}
-              onCheckedChange={(v) => setValue("published", v)}
-            />
+            <Switch checked={published} onCheckedChange={(v) => setValue("published", v)} />
             <Label>Publicado</Label>
+          </div>
+          <div>
+            <Label>Ordem de exibição</Label>
+            <Input type="number" {...register("display_order", { valueAsNumber: true })} />
+            <p className="text-xs text-muted-foreground mt-1">Números menores aparecem primeiro. Reordene na lista de projetos.</p>
           </div>
         </Section>
 
-        {/* Sticky footer */}
         <div className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-md border-t border-border p-4 z-50">
           <div className="max-w-2xl mx-auto flex items-center justify-end gap-3">
-            <Button type="button" variant="ghost" onClick={onBack}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving ? "Salvando..." : "Salvar"}
-            </Button>
+            <Button type="button" variant="ghost" onClick={onBack}>Cancelar</Button>
+            <Button type="submit" disabled={isSaving}>{isSaving ? "Salvando..." : "Salvar"}</Button>
           </div>
         </div>
       </form>
