@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
-import { Mail, MessageCircle, Instagram } from "lucide-react";
+import { Mail, Instagram } from "lucide-react";
+import WhatsAppIcon from "./icons/WhatsAppIcon";
 
 const links = [
   {
-    icon: MessageCircle,
+    icon: WhatsAppIcon,
     label: "WhatsApp",
     href: "https://wa.me/5516991962010",
   },
