@@ -71,7 +71,7 @@ const PortfolioSection = () => {
                 style={{
                   zIndex,
                   marginLeft: col !== 0 ? "-1.5rem" : "0",
-                  ...(col === 0 ? { transform: "scale(1.05)", transformOrigin: "bottom left" } : {}),
+                  ...(col === 0 ? { transform: "scale(1.08)", transformOrigin: "bottom left" } : {}),
                 }}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
