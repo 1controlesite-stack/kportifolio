@@ -27,9 +27,7 @@ const PortfolioSection = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-3xl md:text-5xl font-display font-bold gradient-text inline-block mb-4">
-            Projetos
-          </h2>
+          <h2 className="text-3xl md:text-5xl font-display font-bold gradient-text inline-block mb-4">Projetos</h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
             Cada projeto é uma história. Clique para conhecer a jornada completa.
           </p>
@@ -71,7 +69,7 @@ const PortfolioSection = () => {
                 style={{
                   zIndex,
                   marginLeft: col !== 0 ? "-1.5rem" : "0",
-                  ...(col === 0 ? { transform: "scale(1.08)", transformOrigin: "bottom left" } : {}),
+                  ...(col === 0 ? { transform: "scale(1.2)", transformOrigin: "bottom left" } : {}),
                 }}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
