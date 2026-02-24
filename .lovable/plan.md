@@ -1,30 +1,29 @@
 
 
-# Corrigir Exibicao das Imagens no Portfolio
+# Corrigir tamanho da coluna 1 no grid do Portfolio
 
-## Problemas Identificados
+## Problema
 
-1. **`aspect-[16/10]`** no container forca uma proporcao fixa, cortando imagens que nao tem essa proporcao exata
-2. **`object-cover`** na tag `img` faz a imagem preencher o container cortando o excesso
-3. **`overflow-hidden`** no container esconde as partes cortadas
-
-Isso causa dois efeitos indesejados: imagens cortadas e desalinhamento vertical entre cards da mesma linha (a primeira imagem pode parecer "mais acima" por ter proporcao diferente).
+No grid 4x3, a coluna 1 (mais a esquerda) aparece visualmente menor que as colunas 2, 3 e 4. Isso acontece porque as colunas 2-4 tem `marginLeft: -1.5rem` que as faz "invadir" o espaco da coluna anterior, ganhando largura visual extra. A coluna 1 nao tem essa compensacao.
 
 ## Solucao
 
-### Arquivo: `src/components/PortfolioCard.tsx`
-
-- Remover o `aspect-[16/10]` fixo do container
-- Trocar `object-cover` por `object-contain` (ou simplesmente usar a imagem sem restricao de tamanho)
-- Manter `w-full` e deixar a altura ser determinada pela proporcao natural da imagem
-- Remover `overflow-hidden` do container interno (manter apenas no Link externo para o rounded)
-- Adicionar `items-end` ou alinhar os cards pelo fundo no grid para que fiquem nivelados na mesma linha
-
 ### Arquivo: `src/components/PortfolioSection.tsx`
 
-- Adicionar `items-end` no grid para que todos os cards de cada linha se alinhem pela base, evitando o efeito de "primeiro card mais acima"
+- Remover o `gap-y-6` do grid e controlar o espacamento manualmente (o gap horizontal interfere com o overlap)
+- Usar `gap-0` no grid para que a margem negativa funcione corretamente
+- Adicionar um `marginRight` negativo na coluna 1 (ou ajustar a escala) para que ela ocupe o mesmo espaco visual que as demais
+- Alternativa mais simples e robusta: aplicar `scale` na coluna 1 para que ela cresca proporcionalmente, ou reduzir a margem negativa e compensar com padding
 
-## Resultado Esperado
+**Abordagem escolhida**: Aumentar levemente a escala (`scale`) dos cards da coluna 1 para que fiquem proporcionais aos demais visualmente. Algo como `scale: 1.05` ou similar nos items de `col === 0`.
 
-Todas as imagens aparecem 100% sem cortes, e os cards de cada linha ficam alinhados pela base.
+### Detalhes tecnicos
+
+No `PortfolioSection.tsx`, dentro do map, adicionar uma condicao:
+
+```text
+col === 0 ? { transform: "scale(1.05)", transformOrigin: "bottom left" } : {}
+```
+
+Isso fara os cards da coluna 1 crescerem 5% proporcionalmente, alinhando visualmente com os outros cards que "ganham" espaco pelo overlap. O `transformOrigin: "bottom left"` garante que o crescimento aconteca para a direita e para cima, mantendo o alinhamento pela base.
 
