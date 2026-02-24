@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Rocket } from "lucide-react";
 import PortfolioCard from "./PortfolioCard";
 import PortfolioFilters from "./PortfolioFilters";
 import { projects } from "@/data/projects";
@@ -60,24 +60,37 @@ const PortfolioSection = () => {
 
         {filtered.length === 0 ? (
           <motion.div
-            className="text-center py-16"
+            className="flex flex-col items-center justify-center text-center py-20"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.5 }}
           >
-            <p className="text-foreground/70 font-body text-sm mb-1">
-              Ainda não temos um projeto nesse nicho...
+            {/* Animated icon */}
+            <motion.div
+              className="relative mb-6"
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <div className="w-20 h-20 rounded-2xl gradient-bg flex items-center justify-center opacity-20" />
+              <Rocket className="w-9 h-9 text-accent absolute inset-0 m-auto" />
+            </motion.div>
+
+            <h3 className="font-display text-lg font-semibold text-foreground mb-2">
+              Nenhum projeto encontrado
+            </h3>
+            <p className="text-foreground/60 font-body text-sm max-w-xs mb-1">
+              Ainda não temos um projeto nesse nicho.
             </p>
-            <p className="text-muted-foreground font-body text-xs mb-5">
-              Mas o seu pode ser o primeiro!
+            <p className="text-muted-foreground font-body text-xs mb-6">
+              Mas o seu pode ser o primeiro! 🚀
             </p>
             <a
               href={`https://wa.me/5516991962010?text=${encodeURIComponent("Oi! Vi o portfólio de vocês e gostaria de conversar sobre um projeto.")}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-xs px-4 py-2 rounded-full gradient-bg text-primary-foreground font-body hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 text-sm px-5 py-2.5 rounded-full gradient-bg text-primary-foreground font-body hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
             >
-              <MessageCircle className="w-3.5 h-3.5" />
+              <MessageCircle className="w-4 h-4" />
               Chamar no WhatsApp
             </a>
           </motion.div>
