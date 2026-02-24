@@ -83,21 +83,21 @@ const NetworkParticles = () => {
         const inRadius = dist < MOUSE_RADIUS && dist > 3;
 
         if (inRadius) {
-          const force = 2.0 / dist;
+          const force = 6.0 / dist;
           p.vx += (dx / dist) * force;
           p.vy += (dy / dist) * force;
-          p.vx *= 0.98;
-          p.vy *= 0.98;
+          p.vx *= 0.97;
+          p.vy *= 0.97;
         } else {
-          p.vx *= 0.92;
-          p.vy *= 0.92;
+          p.vx *= 0.90;
+          p.vy *= 0.90;
         }
 
         // Clamp speed
         const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-        if (speed > 4.0) {
-          p.vx = (p.vx / speed) * 4.0;
-          p.vy = (p.vy / speed) * 4.0;
+        if (speed > 7.0) {
+          p.vx = (p.vx / speed) * 7.0;
+          p.vy = (p.vy / speed) * 7.0;
         }
 
         p.x += p.vx;
