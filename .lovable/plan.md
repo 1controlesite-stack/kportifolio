@@ -1,61 +1,65 @@
 
-# Transicao Dark-to-Light entre Hero e Projetos
+
+# Transicao Animada Dark-to-Light com Efeito Bilateral
 
 ## Conceito
 
-Criar uma transicao elegante do fundo escuro (hero) para uma secao de projetos com fundo claro, dando respiro visual e destaque aos cards do portfolio.
+Substituir o gradiente estatico por uma **secao de transicao dedicada** entre o Hero e os Projetos. Duas linhas luminosas (gradiente da marca) surgem das extremidades esquerda e direita, avancam em direcao ao centro e, ao se encontrarem, "explodem" numa onda de luz que revela o fundo claro. Tudo acionado por scroll (whileInView).
 
-## Mudancas
-
-### 1. `src/components/PortfolioSection.tsx`
-- Trocar `bg-background` por um fundo claro: `bg-white` ou cinza muito claro
-- Adicionar um gradiente de transicao no topo da secao (dark -> light) usando um `div` absoluto com gradiente
-- Ajustar cores do texto: titulo continua `gradient-text`, subtitulo passa a cinza escuro
-
-### 2. `src/components/PortfolioFilters.tsx`
-- Ajustar cores dos inputs e chips para funcionar no fundo claro:
-  - Search input: fundo `bg-gray-100`, borda `border-gray-200`, texto escuro
-  - Chips inativos: `bg-gray-100 text-gray-600 border-gray-200`
-  - Chips ativos: mantém `gradient-bg text-white`
-
-### 3. `src/components/PortfolioCard.tsx`
-- Ajustar overlay do hover: `from-background` passa a `from-gray-900` (ou valor escuro fixo) para manter contraste no hover
-- Tags, titulo e descricao no hover: manter textos claros pois o overlay escuro continua
-- Borda do card: ajustar para funcionar em fundo claro
-
-### 4. `src/index.css`
-- Adicionar classe utilitaria `.section-light` com variaveis de cor para a secao clara
-- Manter `.gradient-border-animated` funcional em fundo claro
-
-### 5. `src/components/ContactFooter.tsx`
-- Adicionar transicao gradiente no topo: light -> dark, retornando ao tema escuro
-- Manter fundo escuro atual do footer
-
-## Paleta da secao clara
+## Estrutura
 
 ```text
-Fundo: #F8F9FC (cinza azulado bem claro)
-Texto principal: #1A1A2E (quase preto)
-Texto secundario: #6B7280 (cinza medio)
-Bordas: #E5E7EB (cinza claro)
-Inputs: #F3F4F6 (cinza muito claro)
+[Hero - dark]
+    |  gradiente suave no bottom do Hero (menor, ~15vh)
+    v
+[TransitionDivider - componente novo, ~40vh de altura]
+    |  fundo: gradiente vertical dark -> light
+    |  animacao: duas linhas horizontais das bordas ao centro
+    |  ao se encontrarem: flash sutil + onda radial de luz
+    v
+[PortfolioSection - claro, sem gradiente no topo]
 ```
 
-## Transicoes entre secoes
+## Novo Componente: `src/components/SectionTransition.tsx`
+
+Componente Framer Motion com scroll-triggered animations:
+
+1. **Fundo**: gradiente vertical de `hsl(var(--background))` para `hsl(228 33% 97%)`
+2. **Linha esquerda**: `motion.div` horizontal, comeca em `x: "-100%"`, anima ate `x: "0"` (centro)
+3. **Linha direita**: mesma coisa espelhada, de `x: "100%"` ate `x: "0"`
+4. **Flash central**: quando as linhas "chegam" (delay sincronizado), um circulo radial de opacidade 0 -> 0.3 -> 0 pulsa no centro
+5. **Linha horizontal fina**: apos o encontro, uma linha fina gradiente (roxo-azul-ciano) se expande do centro para as bordas (scaleX 0 -> 1), marcando a divisao
+
+### Detalhes da animacao
+
+- Linhas laterais: 2px de altura, largura 50%, gradiente da marca, com blur/glow
+- Trigger: `whileInView` com `viewport={{ once: true, amount: 0.5 }}`
+- Duracao: ~1.2s para as linhas chegarem, 0.3s para o flash, 0.6s para a linha se expandir
+- Easing: `easeInOut` para as linhas, `easeOut` para o flash
+
+## Mudancas em Arquivos Existentes
+
+### `src/components/Hero.tsx` (linha 82-88)
+- Reduzir o gradiente de transicao de `h-[30vh]` para `h-[15vh]` -- so um fade sutil, a transicao real fica no novo componente
+
+### `src/components/PortfolioSection.tsx` (linha 31)
+- Remover qualquer gradiente de transicao no topo (nao tem, so confirmar)
+- Manter tudo como esta
+
+### `src/pages/Index.tsx`
+- Inserir `<SectionTransition />` entre `<Hero />` e `<PortfolioSection />`
+
+## Resultado Visual
 
 ```text
-[Hero - dark] 
-    |  gradiente ja existente (bottom gradient do hero)
-    v
-[PortfolioSection - claro #F8F9FC]
-    |  gradiente no bottom da secao (claro -> escuro)
-    v
-[ContactFooter - dark]
+Scroll para baixo...
+
+[Dark hero vai sumindo]
+         ====>          <====        (linhas vindo das bordas)
+              *flash*                (encontro no centro)
+    ─────────────────────────────    (linha fina se expande)
+[Fundo claro dos projetos aparece]
 ```
 
-## Detalhes tecnicos
+A transicao fica cinematografica, com movimento e luz, sem ser pesada em performance (poucas divs, sem canvas extra).
 
-- O gradiente de transicao hero->projetos ja existe parcialmente (o `div` com gradient no Hero). Vamos garantir que ele faz fade para a cor clara `#F8F9FC` em vez de `hsl(var(--background))`
-- No bottom do PortfolioSection, adicionar um `div` absoluto com gradiente de `#F8F9FC` para `hsl(var(--background))` para suavizar a volta ao dark
-- Os cards mantem seu comportamento atual de hover (overlay escuro com texto claro)
-- O empty state (nenhum projeto) tambem precisa de ajuste de cores
