@@ -1,11 +1,12 @@
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import logo from "@/assets/logo.png";
-import heroBg from "@/assets/hero-bg.gif";
+import heroVideo from "@/assets/hero-bg.mp4";
 
 const Hero = () => {
   const sectionRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
@@ -18,6 +19,14 @@ const Hero = () => {
   // Content: parallax up faster
   const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "-40%"]);
   const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+
+  // Sync video currentTime to scroll
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    const video = videoRef.current;
+    if (video && video.duration) {
+      video.currentTime = v * video.duration;
+    }
+  });
 
   // Letter-by-letter reveal for "Kenkya"
   const title = "Kenkya";
@@ -32,9 +41,12 @@ const Hero = () => {
         className="absolute inset-0 z-0"
         style={{ scale: bgScale, opacity: bgOpacity }}
       >
-        <img
-          src={heroBg}
-          alt=""
+        <video
+          ref={videoRef}
+          src={heroVideo}
+          muted
+          playsInline
+          preload="auto"
           aria-hidden="true"
           className="w-full h-full object-cover"
         />
