@@ -68,8 +68,9 @@ const PortfolioSection = () => {
                 className="relative"
                 style={{
                   zIndex,
-                  marginLeft: col !== 0 ? "-1.5rem" : "0",
-                  ...(col === 0 ? { transform: "scale(1.2)", transformOrigin: "bottom left" } : {}),
+                  ...(col === 0
+                    ? { marginRight: "-1.5rem" }
+                    : { marginLeft: "-1.5rem" }),
                 }}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
