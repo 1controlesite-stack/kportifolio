@@ -1,88 +1,78 @@
 
-## Objetivo imediato
 
-Resolver o problema “não loga / admin fica carregando infinito” com foco em estabilidade da autenticação e do guard de rota.
+# Redesign do Painel Admin -- Estilo Dashboard Moderno
 
-## Diagnóstico já validado
+Inspirado em paineis como Stripe/Asaas: layout com sidebar fixa, cards de resumo, navegacao clara e formulario organizado em secoes colapsaveis.
 
-Com base no que foi analisado:
+## Estrutura Visual
 
-1. O login por email/senha está funcionando no backend (requisição retorna **200** e token válido).
-2. O usuário `kenkyasites@gmail.com` existe e possui role `admin` em `public.user_roles`.
-3. As políticas RLS de `projects` estão corretas e permissivas (não são mais a causa principal).
-4. O travamento acontece no frontend no estado de autenticação (`loading`), antes do painel renderizar.
-5. O ponto mais provável é o `useAuth` atual: ele usa `await supabase.rpc(...)` dentro do callback de `onAuthStateChange`, padrão que pode causar bloqueio/loop de estado e impedir `loading` de finalizar em alguns cenários.
+```text
++------------------+--------------------------------------------+
+|                  |  Header com breadcrumb + avatar/logout      |
+|   SIDEBAR        +--------------------------------------------+
+|                  |                                            |
+|   Logo           |   Cards de resumo (total, publicados,      |
+|   ----------     |   rascunhos)                               |
+|   Projetos       |                                            |
+|   ----------     |   Tabela de projetos com busca,            |
+|   Sair           |   thumbnail, status badge, acoes inline    |
+|                  |                                            |
++------------------+--------------------------------------------+
+```
 
-## Implementação proposta
+## Mudancas Planejadas
 
-### 1) Refatorar o fluxo de `useAuth` para eliminar deadlock e estados pendentes
-**Arquivo:** `src/hooks/useAuth.ts`
+### 1. Novo layout do Admin (`src/pages/Admin.tsx`)
 
-Ajustes:
+- Sidebar fixa a esquerda (colapsavel em mobile) com logo, link "Projetos" e botao "Sair"
+- Area de conteudo principal com header contextual (breadcrumb: Admin > Projetos > Editar)
+- Usar Shadcn Sidebar component para responsividade
 
-- Remover `async/await` direto dentro de `supabase.auth.onAuthStateChange(...)`.
-- Criar função separada `checkAdmin(userId)` com `try/catch/finally`.
-- Garantir que `setLoading(false)` sempre execute (inclusive quando RPC falhar).
-- Tratar caso sem sessão (`user = null`) de forma imediata (`isAdmin = false`, `loading = false`).
-- Evitar atualização de estado após unmount (flag `isMounted`).
+### 2. Dashboard com metricas (`src/components/AdminDashboardStats.tsx`) -- novo arquivo
 
-Resultado esperado:
-- `/admin` não fica mais preso em spinner infinito.
-- Falha pontual no RPC de role não bloqueia app inteiro (degrada para não-admin em vez de travar).
+- 3 cards no topo: **Total de Projetos**, **Publicados**, **Rascunhos**
+- Icones e cores distintas para cada card
+- Dados derivados da query existente (sem nova query)
 
-### 2) Ajustar UX da tela de login para evitar sensação de “travou”
-**Arquivo:** `src/pages/Login.tsx`
+### 3. Lista de projetos refinada (`src/components/AdminProjectList.tsx`)
 
-Ajustes:
+- Campo de busca por titulo no topo
+- Thumbnail do projeto na tabela (coluna com imagem pequena)
+- Badge colorido para status (publicado = verde, rascunho = amarelo) no lugar do switch
+- Switch movido para dropdown de acoes ("..." menu) junto com editar/excluir
+- Linhas com hover mais suave
+- Estado vazio com ilustracao quando nao ha projetos
 
-- Encerrar `loading` no fluxo completo com `try/catch/finally`.
-- Se login for bem-sucedido mas o usuário não tiver acesso admin, mostrar mensagem clara (ex.: “Conta autenticada, mas sem permissão de admin”).
-- Manter navegação para `/admin`, mas com estado consistente (sem botão preso em “Entrando...” por exceção não tratada).
+### 4. Formulario em secoes (`src/components/AdminProjectForm.tsx`)
 
-Resultado esperado:
-- Botão sempre volta ao estado correto em erro.
-- Mensagens mais claras para diferenciar erro de senha vs. erro de permissão.
+- Organizar campos em secoes colapsaveis usando Collapsible:
+  - **Informacoes basicas** (titulo, slug, descricao, tags)
+  - **Midia** (imagem principal, showcase)
+  - **Conteudo do case** (desafio, processo, solucao, resultado)
+  - **Configuracoes** (ordem, URL ao vivo, publicado)
+- Breadcrumb no topo em vez de botao "Voltar" solto
+- Botoes "Salvar" e "Cancelar" fixos no rodape do formulario (sticky bottom)
 
-### 3) Tornar o `AdminRoute` resiliente a falhas de role-check
-**Arquivo:** `src/components/AdminRoute.tsx`
+### 5. Componente AdminSidebar (`src/components/AdminSidebar.tsx`) -- novo arquivo
 
-Ajustes:
+- Logo Kenkya no topo
+- Navegacao com icone + label (apenas "Projetos" por enquanto, extensivel)
+- Indicador visual do item ativo
+- Botao de logout no rodape da sidebar
+- Colapsavel em mobile (hamburger menu)
 
-- Manter spinner apenas enquanto `loading` real.
-- Com `loading=false`:
-  - sem usuário -> `/login`
-  - usuário sem admin -> `/`
-- (Opcional) exibir fallback de erro amigável se houver estado de erro explícito vindo do hook.
+## Detalhes Tecnicos
 
-Resultado esperado:
-- Guard nunca prende em loop visual.
-- Navegação previsível em todos os casos.
+### Arquivos novos
+- `src/components/AdminSidebar.tsx` -- sidebar com navegacao
+- `src/components/AdminDashboardStats.tsx` -- cards de metricas
 
-## Sequência de execução
+### Arquivos modificados
+- `src/pages/Admin.tsx` -- layout com sidebar + conteudo principal
+- `src/components/AdminProjectList.tsx` -- busca, thumbnail, badges, dropdown de acoes
+- `src/components/AdminProjectForm.tsx` -- secoes colapsaveis, sticky footer
 
-1. Refatorar `useAuth.ts` (prioridade máxima).
-2. Ajustar `Login.tsx` (tratamento de loading/erros).
-3. Revisar `AdminRoute.tsx` para comportamento final.
-4. Validar fluxo manual ponta a ponta.
+### Dependencias
+- Usar componentes Shadcn ja instalados: Sidebar, Collapsible, DropdownMenu, Badge, Card
+- Nenhuma nova dependencia necessaria
 
-## Plano de validação (fim a fim)
-
-1. Acessar `/login`.
-2. Logar com `kenkyasites@gmail.com`.
-3. Confirmar redirecionamento e renderização do `/admin` sem spinner infinito.
-4. Recarregar página em `/admin` (F5) e confirmar que continua carregando normalmente.
-5. Fazer logout e confirmar retorno à proteção de rota.
-6. Testar usuário sem role admin (ou sessão inválida) para confirmar redirecionamento correto.
-
-## Riscos e mitigação
-
-- **Risco:** RPC de role falhar intermitente.
-  - **Mitigação:** `try/catch/finally` com `loading=false` garantido.
-- **Risco:** corrida entre `onAuthStateChange` e `getSession`.
-  - **Mitigação:** centralizar atualização de estado em função única e idempotente.
-- **Risco:** regressão em fluxo de logout.
-  - **Mitigação:** incluir logout/reload no checklist de validação.
-
-## Observação técnica
-
-Não há necessidade de novas mudanças de banco para este bug específico. O problema atual é de sincronização de estado/auth no frontend.
