@@ -31,9 +31,9 @@ const PortfolioSection = () => {
     <section id="projetos" className="relative py-24 md:py-32 px-4 section-light overflow-hidden">
       {/* Bottom transition gradient — light to dark */}
       <div
-        className="absolute bottom-0 left-0 right-0 h-[20vh] pointer-events-none z-10"
+        className="absolute bottom-0 left-0 right-0 h-[30vh] pointer-events-none z-10"
         style={{
-          background: "linear-gradient(to bottom, transparent, hsl(var(--background)))",
+          background: "linear-gradient(to bottom, transparent 0%, hsl(var(--background) / 0.4) 40%, hsl(var(--background)) 100%)",
         }}
       />
 
