@@ -12,7 +12,6 @@ export function useAdminProjects() {
         .from("projects")
         .select("*")
         .order("display_order", { ascending: true });
-
       if (error) throw error;
       return data as Project[];
     },
@@ -29,9 +28,45 @@ export function useAdminProject(id: string | undefined) {
         .select("*")
         .eq("id", id!)
         .single();
-
       if (error) throw error;
       return data as Project;
+    },
+  });
+}
+
+export function useProjectCategories(projectId: string | undefined) {
+  return useQuery({
+    queryKey: ["project-categories", projectId],
+    enabled: !!projectId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("project_categories")
+        .select("category_id")
+        .eq("project_id", projectId!);
+      if (error) throw error;
+      return data.map((r) => r.category_id);
+    },
+  });
+}
+
+export function useSaveProjectCategories() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ projectId, categoryIds }: { projectId: string; categoryIds: string[] }) => {
+      // Delete existing
+      await supabase.from("project_categories").delete().eq("project_id", projectId);
+      // Insert new
+      if (categoryIds.length > 0) {
+        const { error } = await supabase
+          .from("project_categories")
+          .insert(categoryIds.map((category_id) => ({ project_id: projectId, category_id })));
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_, { projectId }) => {
+      qc.invalidateQueries({ queryKey: ["project-categories", projectId] });
+      qc.invalidateQueries({ queryKey: ["admin-projects"] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 }

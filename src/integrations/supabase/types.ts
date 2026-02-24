@@ -14,58 +14,106 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      project_categories: {
+        Row: {
+          category_id: string
+          project_id: string
+        }
+        Insert: {
+          category_id: string
+          project_id: string
+        }
+        Update: {
+          category_id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_categories_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
-          challenge: string
           created_at: string
           description: string
           display_order: number
           id: string
           image: string
           live_url: string | null
-          process: string
           published: boolean
-          result: string
           showcase_image: string | null
           slug: string
-          solution: string
-          tags: string[]
+          testimonial_audio: string | null
+          testimonial_image: string | null
+          testimonial_text: string | null
           title: string
           updated_at: string
         }
         Insert: {
-          challenge: string
           created_at?: string
           description: string
           display_order?: number
           id?: string
           image: string
           live_url?: string | null
-          process: string
           published?: boolean
-          result: string
           showcase_image?: string | null
           slug: string
-          solution: string
-          tags?: string[]
+          testimonial_audio?: string | null
+          testimonial_image?: string | null
+          testimonial_text?: string | null
           title: string
           updated_at?: string
         }
         Update: {
-          challenge?: string
           created_at?: string
           description?: string
           display_order?: number
           id?: string
           image?: string
           live_url?: string | null
-          process?: string
           published?: boolean
-          result?: string
           showcase_image?: string | null
           slug?: string
-          solution?: string
-          tags?: string[]
+          testimonial_audio?: string | null
+          testimonial_image?: string | null
+          testimonial_text?: string | null
           title?: string
           updated_at?: string
         }
