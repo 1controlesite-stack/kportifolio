@@ -59,7 +59,7 @@ const PortfolioSection = () => {
         </motion.div>
 
         {/* 4-column grid with horizontal overlap (left over right) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-6 items-end">
           {filtered.map((project, i) => {
             const col = i % 4;
             const zIndex = 4 - col; // left = higher z
