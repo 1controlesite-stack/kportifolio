@@ -1,9 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import MonitorMockup from "./MonitorMockup";
+import PortfolioCard from "./PortfolioCard";
 import { projects } from "@/data/projects";
-
-const TAB_COLORS = ["kenkya-purple", "kenkya-blue", "kenkya-cyan"];
 
 const PortfolioSection = () => {
   const [activeCategory, setActiveCategory] = useState("Todos");
@@ -21,7 +19,7 @@ const PortfolioSection = () => {
 
   return (
     <section id="projetos" className="py-24 md:py-32 px-4 bg-background">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}
@@ -60,43 +58,31 @@ const PortfolioSection = () => {
           ))}
         </motion.div>
 
-        {/* 3-column grid with overlap */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-0"
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
+        {/* 4-column grid with horizontal overlap (left over right) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-6">
           {filtered.map((project, i) => {
-            const row = Math.floor(i / 3);
-            // Row 0 = back (z:1), Row 1 = middle (z:2), Row 2 = front (z:3)
-            const rowZ = (row + 1) * 10;
+            const col = i % 4;
+            const zIndex = 4 - col; // left = higher z
+
             return (
               <motion.div
                 key={project.slug}
                 className="relative"
                 style={{
-                  marginTop: row > 0 ? "-3rem" : "0",
-                  marginLeft: i % 3 !== 0 ? "-0.5rem" : "0",
-                  zIndex: rowZ,
+                  zIndex,
+                  marginLeft: col !== 0 ? "-1.5rem" : "0",
                 }}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                whileHover={{ zIndex: 100 }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                whileHover={{ zIndex: 100, scale: 1.03 }}
               >
-                <MonitorMockup
-                  image={project.image}
-                  title={project.title}
-                  slug={project.slug}
-                  color={TAB_COLORS[i % TAB_COLORS.length]}
-                />
+                <PortfolioCard project={project} />
               </motion.div>
             );
           })}
-        </motion.div>
+        </div>
       </div>
     </section>
   );
