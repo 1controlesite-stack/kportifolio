@@ -1,96 +1,25 @@
-import { useRef, useEffect, useCallback } from "react";
-import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
+import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import logo from "@/assets/logo.png";
 import heroVideo from "@/assets/hero-bg.mp4";
 
-// Minimum time delta (in seconds) to trigger a new seek — ~1 frame at 30fps
-const SEEK_EPSILON = 0.033;
-
 const Hero = () => {
-  const sectionRef = useRef<HTMLElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const rafRef = useRef<number | null>(null);
-  const pendingProgressRef = useRef<number | null>(null);
-  const videoReadyRef = useRef(false);
-  const lastSeekedTimeRef = useRef(0);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end start"],
-  });
-
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.7, 1], [1, 1, 0]);
-  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "-20%"]);
-  const transitionOpacity = useTransform(scrollYProgress, [0.8, 1], [0, 1]);
-
-  // Gate: only allow seeks after video metadata is loaded
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    const onReady = () => { videoReadyRef.current = true; };
-    if (video.readyState >= 1) {
-      videoReadyRef.current = true;
-    } else {
-      video.addEventListener("loadedmetadata", onReady, { once: true });
-      return () => video.removeEventListener("loadedmetadata", onReady);
-    }
-  }, []);
-
-  // On-demand seek: schedule a single rAF only when there's a pending update
-  const scheduleSeek = useCallback(() => {
-    if (rafRef.current !== null) return; // already scheduled
-    rafRef.current = requestAnimationFrame(() => {
-      rafRef.current = null;
-      const progress = pendingProgressRef.current;
-      const video = videoRef.current;
-      if (progress === null || !video || !videoReadyRef.current || !video.duration) return;
-
-      const clamped = Math.min(1, Math.max(0, progress));
-      const targetTime = clamped * video.duration;
-
-      // Anti-jitter: skip seek if delta is smaller than ~1 frame
-      if (Math.abs(targetTime - lastSeekedTimeRef.current) < SEEK_EPSILON) return;
-
-      // Use fastSeek for large jumps when available, otherwise currentTime
-      if (typeof video.fastSeek === "function" && Math.abs(targetTime - lastSeekedTimeRef.current) > 0.5) {
-        video.fastSeek(targetTime);
-      } else {
-        video.currentTime = targetTime;
-      }
-      lastSeekedTimeRef.current = targetTime;
-      pendingProgressRef.current = null;
-    });
-  }, []);
-
-  // Cleanup any pending rAF on unmount
-  useEffect(() => {
-    return () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
-
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    pendingProgressRef.current = v;
-    scheduleSeek();
-  });
-
   return (
-    <section ref={sectionRef} className="relative h-[300vh]">
-      <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative h-screen">
+      <div className="h-full flex items-center justify-center overflow-hidden">
         {/* Video background */}
-        <motion.div className="absolute inset-0 z-0" style={{ scale: bgScale }}>
+        <div className="absolute inset-0 z-0">
           <video
-            ref={videoRef}
             src={heroVideo}
+            autoPlay
+            loop
             muted
             playsInline
             preload="auto"
             aria-hidden="true"
             className="w-full h-full object-cover"
           />
-        </motion.div>
+        </div>
 
         {/* Overlay */}
         <div className="absolute inset-0 z-[1] bg-black/40" />
@@ -98,7 +27,9 @@ const Hero = () => {
         {/* Content */}
         <motion.div
           className="relative z-10 flex flex-col items-center gap-6 px-4"
-          style={{ y: contentY, opacity: contentOpacity }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
         >
           <motion.img
             src={logo}
@@ -150,10 +81,9 @@ const Hero = () => {
         </motion.div>
 
         {/* Transition gradient to next section */}
-        <motion.div
+        <div
           className="absolute bottom-0 left-0 right-0 h-[30vh] z-20 pointer-events-none"
           style={{
-            opacity: transitionOpacity,
             background: "linear-gradient(to bottom, transparent, hsl(var(--background)))",
           }}
         />
