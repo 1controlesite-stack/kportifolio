@@ -1,26 +1,23 @@
 
 
-# Correcao de Contraste nos Cards do Portfolio
+# Reforcar Contraste dos Cards do Portfolio
 
 ## Problema
 
-O overlay gradiente atual usa `from-background via-background/40 to-transparent` com `opacity-70`, que resulta num contraste fraco -- o texto (titulo, descricao, tags) fica dificil de ler sobre a imagem, especialmente em imagens claras como a screenshot mostra.
+O overlay gradiente atual ainda deixa o fundo claro demais, especialmente no centro da imagem onde o `via-background/60` nao cobre o suficiente. No hover, `opacity-95` ajuda mas o gradiente em si precisa ser mais denso.
 
-## Solucao
+## Alteracoes
 
 ### Arquivo: `src/components/PortfolioCard.tsx`
 
-1. **Overlay mais forte no estado normal**: Aumentar a opacidade base do gradiente de `opacity-70` para `opacity-80`, e trocar `via-background/40` por `via-background/60` para cobrir mais area com contraste
-2. **Hover ainda mais escuro**: Manter `group-hover:opacity-95` (ja esta bom)
-3. **Titulo com mais peso**: Trocar `font-normal` por `font-semibold` e adicionar `drop-shadow-md` para garantir legibilidade mesmo sobre imagens claras
-4. **Descricao com mais contraste**: Trocar `text-foreground/70` por `text-foreground/80`
-5. **Tags com mais contraste**: Trocar `text-foreground/60` por `text-foreground/70` e `border-border/60` por `border-border/80`
-6. **Text shadow sutil no conteudo**: Adicionar um estilo de text-shadow no container do conteudo para garantir legibilidade universal
+**Linha 27 -- Overlay gradiente:**
+- De: `from-background via-background/60 to-transparent opacity-85 group-hover:opacity-95`
+- Para: `from-background via-background/80 to-background/20 opacity-90 group-hover:opacity-100`
 
-| Linha | De | Para |
-|---|---|---|
-| 27 | `via-background/40 opacity-70` | `via-background/60 opacity-85` |
-| 36 | `text-foreground/60`, `border-border/60` | `text-foreground/70`, `border-border/80` |
-| 44 | `font-normal` | `font-semibold drop-shadow-md` |
-| 49 | `text-foreground/70` | `text-foreground/85` |
+Mudancas especificas:
+- `via-background/60` para `via-background/80` -- escurece o meio do gradiente significativamente
+- `to-transparent` para `to-background/20` -- adiciona uma leve cobertura ate no topo da imagem
+- `opacity-85` para `opacity-90` -- base mais escura
+- `group-hover:opacity-95` para `group-hover:opacity-100` -- hover totalmente escuro para maximo contraste com o texto
 
+Resultado: o fundo fica consistentemente escuro, o texto branco ganha contraste forte em qualquer imagem (clara ou escura), e no hover a legibilidade e maxima.
