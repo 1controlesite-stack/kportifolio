@@ -1,15 +1,37 @@
+import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import logo from "@/assets/logo.png";
 import heroVideo from "@/assets/hero-bg.mp4";
 
+const VIDEO_START = 2.5;
+
 const Hero = () => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = VIDEO_START;
+    const onLoop = () => { video.currentTime = VIDEO_START; };
+    video.addEventListener("seeking", () => {});
+    video.addEventListener("timeupdate", () => {
+      if (video.currentTime < VIDEO_START && !video.seeking) {
+        video.currentTime = VIDEO_START;
+      }
+    });
+    video.addEventListener("seeked", () => {});
+    // When video loops back to 0, jump to start offset
+    video.addEventListener("play", () => { if (video.currentTime < VIDEO_START) video.currentTime = VIDEO_START; });
+    return () => {};
+  }, []);
   return (
     <section className="relative h-screen">
       <div className="h-full flex items-center justify-center overflow-hidden">
         {/* Video background */}
         <div className="absolute inset-0 z-0">
           <video
+            ref={videoRef}
             src={heroVideo}
             autoPlay
             loop
