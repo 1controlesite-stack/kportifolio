@@ -28,8 +28,13 @@ const Hero = () => {
   return (
     <section className="relative h-screen">
       <div className="h-full flex items-center justify-center overflow-hidden">
-        {/* Video background */}
-        <div className="absolute inset-0 z-0">
+      {/* Video background with fade-in */}
+        <motion.div
+          className="absolute inset-0 z-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+        >
           <video
             ref={videoRef}
             src={heroVideo}
@@ -41,10 +46,28 @@ const Hero = () => {
             aria-hidden="true"
             className="w-full h-full object-cover"
           />
-        </div>
+        </motion.div>
 
         {/* Overlay */}
-        <div className="absolute inset-0 z-[1] bg-black/40" />
+        <div className="absolute inset-0 z-[1] bg-black/65" />
+
+        {/* Tech frame */}
+        <motion.div
+          className="absolute inset-6 md:inset-10 z-[2] pointer-events-none border border-white/10 rounded-sm"
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, delay: 1.2, ease: "easeOut" }}
+        >
+          {/* Corner marks */}
+          {/* Top-left */}
+          <div className="absolute -top-px -left-px w-6 h-6 border-t-2 border-l-2 border-[hsl(var(--kenkya-purple))]" />
+          {/* Top-right */}
+          <div className="absolute -top-px -right-px w-6 h-6 border-t-2 border-r-2 border-[hsl(var(--kenkya-cyan))]" />
+          {/* Bottom-left */}
+          <div className="absolute -bottom-px -left-px w-6 h-6 border-b-2 border-l-2 border-[hsl(var(--kenkya-cyan))]" />
+          {/* Bottom-right */}
+          <div className="absolute -bottom-px -right-px w-6 h-6 border-b-2 border-r-2 border-[hsl(var(--kenkya-purple))]" />
+        </motion.div>
 
         {/* Content */}
         <motion.div
