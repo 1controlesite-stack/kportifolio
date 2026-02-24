@@ -24,37 +24,22 @@ const SectionTransition = () => {
   const flashOpacity = useTransform(scrollYProgress, [0.38, 0.4, 0.45], [0, 0.9, 0]);
   const flashScale = useTransform(scrollYProgress, [0.38, 0.45], [0.5, 3.5]);
 
-  // Clip-path reveal: 0.4–0.8
-  const clipRadius = useTransform(scrollYProgress, [0.4, 0.8], [0, 150]);
-
-  // Final line: 0.6–0.9
-  const lineScale = useTransform(scrollYProgress, [0.6, 0.9], [0, 1]);
-
   // Particles: 0.4–0.6
   const particleProgress = useTransform(scrollYProgress, [0.38, 0.6], [0, 1]);
 
   return (
     <section
       ref={ref}
-      className="relative min-h-[50vh] z-30"
+      className="relative min-h-[50vh] z-20 pointer-events-none"
       style={{ marginTop: "-25vh", marginBottom: "-25vh", backgroundColor: "transparent" }}
     >
-      {/* Light reveal layer */}
+      {/* Left beam — fixed 20deg angle, light travels from left edge to center */}
       <motion.div
-        className="absolute inset-0"
-        style={{
-          backgroundColor: "hsl(228 33% 97%)",
-          clipPath: useTransform(clipRadius, (v) => `circle(${v}% at 50% 50%)`),
-        }}
-      />
-
-      {/* Left beam — V angle: rotate(20deg), origin right center */}
-      <motion.div
-        className="absolute top-1/2 left-1/2 h-[3px] pointer-events-none"
+        className="absolute top-1/2 left-1/2 h-[3px]"
         style={{
           width: "60vw",
           marginLeft: "-60vw",
-          transformOrigin: "right center",
+          transformOrigin: "left center",
           rotate: "20deg",
           scaleX: beamScale,
           background:
@@ -64,12 +49,12 @@ const SectionTransition = () => {
         }}
       />
 
-      {/* Right beam — V angle: rotate(-20deg), origin left center */}
+      {/* Right beam — fixed -20deg angle, light travels from right edge to center */}
       <motion.div
-        className="absolute top-1/2 left-1/2 h-[3px] pointer-events-none"
+        className="absolute top-1/2 left-1/2 h-[3px]"
         style={{
           width: "60vw",
-          transformOrigin: "left center",
+          transformOrigin: "right center",
           rotate: "-20deg",
           scaleX: beamScale,
           background:
@@ -81,7 +66,7 @@ const SectionTransition = () => {
 
       {/* Central flash */}
       <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] rounded-full pointer-events-none"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] rounded-full"
         style={{
           background:
             "radial-gradient(circle, hsl(0 0% 100% / 0.95) 0%, hsl(var(--kenkya-blue) / 0.6) 30%, transparent 55%)",
@@ -94,7 +79,7 @@ const SectionTransition = () => {
       {particles.map((p, i) => (
         <motion.div
           key={i}
-          className="absolute top-1/2 left-1/2 w-1.5 h-1.5 rounded-full pointer-events-none"
+          className="absolute top-1/2 left-1/2 w-1.5 h-1.5 rounded-full"
           style={{
             backgroundColor: `hsl(var(${p.color}))`,
             boxShadow: `0 0 6px 2px hsl(var(${p.color}) / 0.6)`,
@@ -104,17 +89,6 @@ const SectionTransition = () => {
           }}
         />
       ))}
-
-      {/* Expanding center line */}
-      <motion.div
-        className="absolute top-1/2 left-0 right-0 h-[2px] -translate-y-1/2"
-        style={{
-          background:
-            "linear-gradient(90deg, hsl(var(--kenkya-purple)), hsl(var(--kenkya-blue)), hsl(var(--kenkya-cyan)))",
-          boxShadow: "0 0 8px 1px hsl(var(--kenkya-blue) / 0.4)",
-          scaleX: lineScale,
-        }}
-      />
     </section>
   );
 };
