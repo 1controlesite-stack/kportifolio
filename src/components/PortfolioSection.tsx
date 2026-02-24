@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { MessageCircle } from "lucide-react";
 import PortfolioCard from "./PortfolioCard";
 import PortfolioFilters from "./PortfolioFilters";
 import { projects } from "@/data/projects";
@@ -57,33 +58,57 @@ const PortfolioSection = () => {
           />
         </motion.div>
 
-        {/* 4-column grid with horizontal overlap (left over right) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-6 items-end">
-          {filtered.map((project, i) => {
-            const col = i % 4;
-            const zIndex = 4 - col; // left = higher z
+        {filtered.length === 0 ? (
+          <motion.div
+            className="text-center py-16"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <p className="text-foreground/70 font-body text-sm mb-1">
+              Ainda não temos um projeto nesse nicho...
+            </p>
+            <p className="text-muted-foreground font-body text-xs mb-5">
+              Mas o seu pode ser o primeiro!
+            </p>
+            <a
+              href={`https://wa.me/5516991962010?text=${encodeURIComponent("Oi! Vi o portfólio de vocês e gostaria de conversar sobre um projeto.")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-xs px-4 py-2 rounded-full gradient-bg text-primary-foreground font-body hover:opacity-90 transition-opacity"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              Chamar no WhatsApp
+            </a>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-6 items-end">
+            {filtered.map((project, i) => {
+              const col = i % 4;
+              const zIndex = 4 - col;
 
-            return (
-              <motion.div
-                key={project.slug}
-                className="relative"
-                style={{
-                  zIndex,
-                  ...(col === 0
-                    ? { marginRight: "-1.5rem" }
-                    : { marginLeft: "-1.5rem" }),
-                }}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-                whileHover={{ zIndex: 100, scale: 1.03 }}
-              >
-                <PortfolioCard project={project} />
-              </motion.div>
-            );
-          })}
-        </div>
+              return (
+                <motion.div
+                  key={project.slug}
+                  className="relative"
+                  style={{
+                    zIndex,
+                    ...(col === 0
+                      ? { marginRight: "-1.5rem" }
+                      : { marginLeft: "-1.5rem" }),
+                  }}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.08 }}
+                  whileHover={{ zIndex: 100, scale: 1.03 }}
+                >
+                  <PortfolioCard project={project} />
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
