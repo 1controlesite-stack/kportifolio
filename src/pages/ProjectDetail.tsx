@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
-import { projects } from "@/data/projects";
+import { ArrowLeft, ArrowRight, ExternalLink, Loader2 } from "lucide-react";
+import { useProjects, useProject } from "@/hooks/useProjects";
 
 const sections = [
   { key: "challenge" as const, label: "O Desafio" },
@@ -13,8 +13,16 @@ const sections = [
 const ProjectDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const index = projects.findIndex((p) => p.slug === slug);
-  const project = projects[index];
+  const { data: project, isLoading } = useProject(slug);
+  const { data: allProjects = [] } = useProjects();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   if (!project) {
     return (
@@ -31,8 +39,9 @@ const ProjectDetail = () => {
     );
   }
 
-  const prev = index > 0 ? projects[index - 1] : null;
-  const next = index < projects.length - 1 ? projects[index + 1] : null;
+  const index = allProjects.findIndex((p) => p.slug === slug);
+  const prev = index > 0 ? allProjects[index - 1] : null;
+  const next = index < allProjects.length - 1 ? allProjects[index + 1] : null;
 
   return (
     <main className="min-h-screen bg-background">
@@ -50,9 +59,9 @@ const ProjectDetail = () => {
           >
             <ArrowLeft className="w-4 h-4" /> Voltar
           </button>
-          {project.liveUrl && (
+          {project.live_url && (
             <a
-              href={project.liveUrl}
+              href={project.live_url}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm px-4 py-2 rounded-full gradient-bg text-primary-foreground hover:opacity-90 transition-opacity"

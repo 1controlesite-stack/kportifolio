@@ -1,14 +1,14 @@
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import type { Project } from "@/data/projects";
+import type { Project } from "@/hooks/useProjects";
 
 interface PortfolioCardProps {
   project: Project;
 }
 
 const PortfolioCard = ({ project }: PortfolioCardProps) => {
-  const displayImage = project.showcaseImage || project.image;
+  const displayImage = project.showcase_image || project.image;
 
   return (
     <Link
