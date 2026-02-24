@@ -33,7 +33,7 @@ const PortfolioFilters = ({
   }, [projects]);
 
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-12">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mb-12">
       {/* Search bar */}
       <div className="relative flex-1 max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
