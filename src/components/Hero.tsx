@@ -4,12 +4,16 @@ import { ChevronDown } from "lucide-react";
 import logo from "@/assets/logo.png";
 import heroVideo from "@/assets/hero-bg.mp4";
 
+// Minimum time delta (in seconds) to trigger a new seek — ~1 frame at 30fps
+const SEEK_EPSILON = 0.033;
+
 const Hero = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const scrollValueRef = useRef(0);
   const rafRef = useRef<number | null>(null);
-  const needsUpdateRef = useRef(false);
+  const pendingProgressRef = useRef<number | null>(null);
+  const videoReadyRef = useRef(false);
+  const lastSeekedTimeRef = useRef(0);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -21,28 +25,55 @@ const Hero = () => {
   const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "-20%"]);
   const transitionOpacity = useTransform(scrollYProgress, [0.8, 1], [0, 1]);
 
-  // rAF loop for fluid video seeking
-  const tick = useCallback(() => {
-    if (needsUpdateRef.current) {
-      const video = videoRef.current;
-      if (video && video.duration) {
-        video.currentTime = scrollValueRef.current * video.duration;
-      }
-      needsUpdateRef.current = false;
+  // Gate: only allow seeks after video metadata is loaded
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const onReady = () => { videoReadyRef.current = true; };
+    if (video.readyState >= 1) {
+      videoReadyRef.current = true;
+    } else {
+      video.addEventListener("loadedmetadata", onReady, { once: true });
+      return () => video.removeEventListener("loadedmetadata", onReady);
     }
-    rafRef.current = requestAnimationFrame(tick);
   }, []);
 
+  // On-demand seek: schedule a single rAF only when there's a pending update
+  const scheduleSeek = useCallback(() => {
+    if (rafRef.current !== null) return; // already scheduled
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      const progress = pendingProgressRef.current;
+      const video = videoRef.current;
+      if (progress === null || !video || !videoReadyRef.current || !video.duration) return;
+
+      const clamped = Math.min(1, Math.max(0, progress));
+      const targetTime = clamped * video.duration;
+
+      // Anti-jitter: skip seek if delta is smaller than ~1 frame
+      if (Math.abs(targetTime - lastSeekedTimeRef.current) < SEEK_EPSILON) return;
+
+      // Use fastSeek for large jumps when available, otherwise currentTime
+      if (typeof video.fastSeek === "function" && Math.abs(targetTime - lastSeekedTimeRef.current) > 0.5) {
+        video.fastSeek(targetTime);
+      } else {
+        video.currentTime = targetTime;
+      }
+      lastSeekedTimeRef.current = targetTime;
+      pendingProgressRef.current = null;
+    });
+  }, []);
+
+  // Cleanup any pending rAF on unmount
   useEffect(() => {
-    rafRef.current = requestAnimationFrame(tick);
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-  }, [tick]);
+  }, []);
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
-    scrollValueRef.current = v;
-    needsUpdateRef.current = true;
+    pendingProgressRef.current = v;
+    scheduleSeek();
   });
 
   return (
