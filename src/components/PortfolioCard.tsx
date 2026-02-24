@@ -28,7 +28,7 @@ const PortfolioCard = ({ project }: PortfolioCardProps) => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent opacity-0 group-hover:opacity-90 transition-opacity duration-400" />
 
         {/* Subtle bottom gradient — always visible for title legibility */}
-        <div className="absolute bottom-0 inset-x-0 h-1/2 bg-gradient-to-t from-background/70 via-background/30 to-transparent pointer-events-none" />
+        
 
         {/* Content — slides up on hover */}
         <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col justify-end translate-y-2 group-hover:translate-y-0 transition-transform duration-400">
@@ -45,7 +45,7 @@ const PortfolioCard = ({ project }: PortfolioCardProps) => {
           </div>
 
           {/* Title — always visible */}
-          <h3 className="font-display text-sm font-semibold text-foreground tracking-wide leading-tight mb-1 [text-shadow:_0_1px_8px_rgb(0_0_0_/_90%),_0_0_2px_rgb(0_0_0_/_60%)]">
+          <h3 className="font-display text-sm font-semibold text-foreground tracking-wide leading-tight mb-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
             {project.title}
           </h3>
 
