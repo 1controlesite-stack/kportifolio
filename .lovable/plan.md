@@ -1,115 +1,105 @@
 
 
-# Portfolio -- Mockup de Notebook (Desktop) e Smartphone (Mobile)
+# Portfolio -- Carrossel de Monitores (estilo ToFlow)
 
-## Conceito
-Substituir a seção de projetos atual por uma experiência imersiva: no desktop, os projetos aparecem dentro de um notebook CSS puro; no mobile, dentro de um smartphone CSS puro. Ambos com barra de busca, filtros por categoria e grid de projetos com hover interativo.
+## O que muda
 
-## Arquivos a criar/modificar
+Remover o conceito de notebook/smartphone com grid interno. Em vez disso, criar um **carrossel horizontal** de **mockups de monitor** (cada projeto dentro de um monitor CSS puro), com uma **aba lateral colorida** mostrando o nome do projeto na vertical -- exatamente como na referencia ToFlow.
 
-### 1. Novo: `src/components/PortfolioSection.tsx`
-Componente principal que substitui `ProjectsSection` na `Index.tsx`.
+## Layout Visual
 
-**Estrutura:**
-- Titulo + subtitulo da secao (acima do mockup)
-- Componente `<DeviceMockup>` que renderiza notebook ou smartphone baseado no breakpoint
-- Dentro do mockup: barra de busca + chips de categoria + grid de projetos
+```text
+   ____________________      ____________________      ____________________
+  |  _________________  |   |  _________________  |   |  _________________  |
+  | |                 | |   | |                 | |   | |                 | |
+  | |   Screenshot    | |   | |   Screenshot    | |   | |   Screenshot    | |
+  | |   do projeto    | |   | |   do projeto    | |   | |   do projeto    | |
+  | |_________________| |   | |_________________| |   | |_________________| |
+  |_____________________|   |_____________________|   |_____________________|
+        |_________|               |_________|               |_________|
+  [ABA VERTICAL]           [ABA VERTICAL]            [ABA VERTICAL]
+```
 
-### 2. Novo: `src/components/DeviceMockup.tsx`
-Renderiza o frame do dispositivo em CSS puro.
+Cada monitor tem:
+- Frame com borda arredondada no topo, fundo escuro
+- Imagem/screenshot do projeto ocupando a tela
+- Base/pedestal do monitor (retangulo fino + pe)
+- Aba lateral colorida (gradient) com nome do projeto escrito na vertical (rotacionado 90 graus)
+- Hover: leve scale-up + sombra mais intensa + botao "Visualizar" aparece
 
-**Desktop -- Notebook:**
-- Tela com borda arredondada top, fundo escuro (`bg-card`)
-- Barra superior estilo macOS: 3 bolinhas (vermelho, amarelo, verde) + titulo "Portfolio"
-- Area de conteudo interna com scroll se necessario
-- Base/hinge do notebook: retangulo fino abaixo da tela com gradiente sutil
+## Arquivos
 
-**Mobile -- Smartphone:**
-- Frame retangular com bordas bem arredondadas (border-radius ~40px)
-- Notch ou dynamic island no topo (pill shape central)
-- Home indicator na base (barrinha fina)
-- Mesma area de conteudo interna
+### 1. Reescrever: `src/components/PortfolioSection.tsx`
+- Titulo + subtitulo (manter)
+- Carrossel horizontal usando **Embla Carousel** (ja instalado: `embla-carousel-react`)
+- Cada slide e um `<MonitorMockup>` com o projeto
+- Setas de navegacao opcionais (dots ou arrows)
+- No mobile: carrossel com 1 item visivel, scroll horizontal
 
-**Responsividade:**
-- `useIsMobile()` hook existente para alternar entre os dois frames
-- Notebook ocupa ~90% da largura da secao (max-width ~1100px)
-- Smartphone ocupa ~320px de largura, centralizado
+### 2. Reescrever: `src/components/DeviceMockup.tsx` (renomear para `MonitorMockup.tsx`)
+- Novo componente `MonitorMockup` que renderiza um monitor de desktop em CSS puro
+- Props: `image`, `title`, `slug`, `color` (cor da aba lateral)
 
-### 3. Novo: `src/components/PortfolioGrid.tsx`
-Conteudo interno do mockup (igual para ambos os devices).
+**Estrutura CSS do monitor:**
+```text
+Monitor frame:
+  - rounded-t-lg, border border-border/30
+  - bg-[hsl(240,15%,8%)]
+  - Borda inferior reta (bottom da tela)
 
-**Header interno:**
-- Input de busca com icone de lupa (filtra por titulo/descricao)
-- Chips de categoria extraidos dinamicamente das tags dos projetos: [Todos] [E-commerce] [SaaS] [Fintech] [EdTech] etc.
-- Chip ativo tem `gradient-bg`, inativos tem `bg-muted`
+Tela (interna):
+  - Imagem do projeto em aspect-video, object-cover
+  - Overlay no hover com botao "Ver projeto"
 
-**Grid de projetos:**
-- Desktop: 3 colunas (33/33/33) com gap
-- Mobile (dentro do smartphone): 1 coluna
-- Cada item e uma thumbnail (imagem do projeto em `aspect-video`)
-- **Hover effect**: overlay escuro com fade-in mostrando:
-  - Titulo do projeto (bold, branco)
-  - Descricao curta (1 linha, muted)
-  - Tags como badges pequenos
-  - Icone de seta (ArrowUpRight) no canto
-- Click leva para `/projeto/:slug` (mesmo comportamento atual)
+Base:
+  - Trapezio/retangulo fino centralizado abaixo da tela
+  - Pedestal: retangulo menor embaixo
 
-### 4. Modificar: `src/pages/Index.tsx`
-- Trocar `<ProjectsSection />` por `<PortfolioSection />`
+Aba lateral:
+  - Posicionada no lado direito do monitor
+  - gradient-bg com altura total da tela
+  - Texto rotacionado 90deg (writing-mode: vertical-rl)
+  - Largura ~40px
+  - Nome do projeto em uppercase, font-display, bold
+```
 
-### 5. Modificar: `src/index.css`
-- Adicionar animacao sutil de entrada para o mockup (fade-in + leve translate-y)
+### 3. Remover: `src/components/PortfolioGrid.tsx`
+- Nao sera mais necessario (busca e filtros removidos nesta versao)
+
+### 4. Remover referencia ao `DeviceMockup.tsx` antigo
+- Substituido pelo `MonitorMockup`
+
+## Carrossel (Embla)
+
+- Desktop: mostrar 3 monitores parcialmente visiveis (o central maior, laterais cortados como na referencia)
+- Mobile: 1 monitor visivel, swipe horizontal
+- Loop infinito
+- Autoplay opcional (desligado por padrao)
+- Dots indicadores embaixo
+
+## Interacoes
+
+- **Hover no monitor**: leve `scale(1.03)`, sombra gradient mais intensa, overlay com botao "Ver projeto"
+- **Click**: navega para `/projeto/:slug`
+- **Aba lateral**: sempre visivel, serve como label visual
+
+## Cores das abas laterais
+
+Cada projeto recebe uma cor da paleta (ciclica):
+- Projeto 1: `kenkya-purple`
+- Projeto 2: `kenkya-blue`
+- Projeto 3: `kenkya-cyan`
+- Projeto 4: `kenkya-purple` (repete)
 
 ## Detalhes Tecnicos
 
-**CSS do Notebook (desktop):**
-```text
-Tela:
-  - rounded-t-xl, border border-border/50
-  - bg-[hsl(240,15%,6%)] (mais escuro que o card, simular tela)
-  - shadow-2xl com sombra purple sutil
-  - aspect-ratio ~16/10
-
-Barra superior (dentro da tela):
-  - h-8, bg-muted/50, flex items-center, px-3
-  - 3 divs circulares (w-3 h-3 rounded-full) com cores red, yellow, green
-
-Base/hinge:
-  - w-[110%] centralizado, h-3, rounded-b-xl
-  - gradient-bg com opacity baixa
-```
-
-**CSS do Smartphone (mobile):**
-```text
-Frame:
-  - rounded-[40px], border-[3px] border-muted
-  - bg-[hsl(240,15%,6%)]
-  - shadow-2xl
-  - p-2 (espaco interno entre frame e tela)
-
-Notch:
-  - div centralizado no topo, w-24 h-5, rounded-full, bg-muted
-
-Home indicator:
-  - div centralizado na base, w-32 h-1, rounded-full, bg-muted/50
-```
-
-**Filtragem:**
-- Estado local com `useState` para categoria selecionada e termo de busca
-- `useMemo` para filtrar projetos
-- Categorias unicas extraidas com `Set` das tags de todos os projetos
-
-**Animacoes:**
-- Framer Motion para entrada do mockup (viewport-triggered)
-- Hover nos cards com `transition-all duration-300`
-- Chips de categoria com transicao suave de cor
-
-## Componentes existentes reutilizados
-- `useIsMobile()` de `src/hooks/use-mobile.tsx`
-- Dados de `src/data/projects.ts`
-- Classes utilitarias `gradient-text`, `gradient-bg` do CSS existente
-- `Link` do react-router-dom para navegacao
+- Usar `useEmblaCarousel` do pacote ja instalado
+- Framer Motion para entrada da secao (viewport-triggered)
+- CSS transitions para hover effects
+- `writing-mode: vertical-rl` + `transform: rotate(180deg)` para texto vertical da aba
+- Responsivo: `slidesToScroll: 1`, `align: 'center'` no Embla
 
 ## Resultado esperado
-Uma secao de portfolio que parece uma janela real de browser/app, dando contexto visual ao trabalho apresentado. No desktop, um notebook elegante com 3 colunas. No mobile, um smartphone com scroll vertical de 1 coluna. Busca e filtros funcionais.
+
+Uma secao que parece uma vitrine de monitores exibindo os projetos, com abas coloridas laterais identificando cada um. Efeito visual premium e coerente com a identidade de web designer. Scroll horizontal no carrossel, hover interativo, navegacao para detalhes do projeto.
 
