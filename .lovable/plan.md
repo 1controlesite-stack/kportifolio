@@ -1,35 +1,24 @@
 
 
-# Hero com Video Sincronizado ao Scroll
+# Hero — Reestrutura com Novo Video
 
-## O que muda
-Trocar o GIF de fundo por um video MP4 que avanca e retrocede conforme o scroll — quando o usuario desce a pagina, o video avanca; quando sobe, o video volta. Efeito cinematografico e imersivo.
+## Resumo
+Substituir o video atual por `BgV.mp4` e aplicar o plano ja aprovado: reestruturar o Hero para ser minimalista com scroll longo e video perceptivel.
 
-## Como funciona tecnicamente
+## Mudancas
 
-### Sincronizacao video + scroll
-- Usar `useScroll` do framer-motion para obter `scrollYProgress` (valor de 0 a 1)
-- Usar `useMotionValueEvent` para escutar mudancas no `scrollYProgress`
-- A cada mudanca, setar `videoRef.current.currentTime = scrollYProgress * video.duration`
-- Isso faz o video avancar/retroceder proporcionalmente ao scroll
-- O video fica com `muted`, `playsInline`, **sem autoplay** — o scroll controla tudo
+### 1. Asset
+- Copiar `user-uploads://BgV.mp4` para `src/assets/hero-bg.mp4` (substitui o atual)
 
-### Arquivos
-
-1. **Copiar** `user-uploads://giphy.mp4` para `src/assets/hero-bg.mp4`
-2. **`src/components/Hero.tsx`** — substituir o `<img>` do GIF por `<video>`:
-   - Remover import do GIF
-   - Adicionar import do MP4
-   - Trocar `<img>` por `<video ref={videoRef} src={heroVideo} muted playsInline preload="auto" />`
-   - Adicionar `useRef` para o video element
-   - Usar `useMotionValueEvent(scrollYProgress, "change", (v) => { video.currentTime = v * video.duration })`
-   - Manter overlay escuro, parallax do conteudo, e todas as animacoes de entrada
-3. **Remover** `src/assets/hero-bg.gif` (nao mais necessario)
-
-### O que se mantem
-- Overlay `bg-black/60` para WCAG AA
-- Logo com bounce, subtitulo, titulo letra por letra, CTA
-- Parallax do conteudo (contentY, contentOpacity)
-- Zoom sutil do background no scroll (bgScale)
-- Scroll indicator
+### 2. `src/components/Hero.tsx` — reescrita completa
+- **Secao**: `h-[300vh]` com wrapper interno `sticky top-0 h-screen` — 3x mais espaco de scroll para o video progredir visivelmente
+- **Video**: sync com `useMotionValueEvent` + `scrollYProgress` (mesmo mecanismo, mas agora com range 3x maior)
+- **Overlay**: `bg-black/40` (mais leve, video mais visivel)
+- **Tipografia minimalista**:
+  - Titulo "Kenkya": `font-light`, `text-6xl md:text-8xl lg:text-9xl`, branco puro (sem gradient-text, sem extrabold, sem stroke)
+  - Subtitulo: `font-light`, `tracking-[0.4em]`, `text-xs md:text-sm`, uppercase
+  - Sem animacao letra por letra — fade-in simples
+- **Logo**: menor, sem glow exagerado
+- **CTA**: estilo outline (`border border-white/30`, sem gradient-bg)
+- **Conteudo**: fade-out nos ultimos 30% do scroll (`useTransform(scrollYProgress, [0.7, 1], [1, 0])`)
 
