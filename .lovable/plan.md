@@ -1,29 +1,27 @@
 
 
-# Corrigir tamanho da coluna 1 no grid do Portfolio
+# Corrigir tamanho da coluna 1 -- abordagem correta
 
-## Problema
+## Problema real
 
-No grid 4x3, a coluna 1 (mais a esquerda) aparece visualmente menor que as colunas 2, 3 e 4. Isso acontece porque as colunas 2-4 tem `marginLeft: -1.5rem` que as faz "invadir" o espaco da coluna anterior, ganhando largura visual extra. A coluna 1 nao tem essa compensacao.
+O `transform: scale()` nao resolve o problema porque o `scale` e puramente visual -- ele nao altera o espaco que o elemento ocupa no grid. O grid continua alocando a mesma largura para a coluna 1, entao o card fica "ampliado" mas transborda ou nao se alinha corretamente.
 
-## Solucao
+O problema real: colunas 2, 3 e 4 tem `marginLeft: -1.5rem`, o que faz com que elas "invadam" 1.5rem para a esquerda, ganhando largura visual extra. A coluna 1 nao tem essa compensacao.
+
+## Solucao correta
+
+Em vez de `scale`, aplicar `marginRight: -1.5rem` nos cards da coluna 1. Isso faz o card da coluna 1 se estender 1.5rem para a direita, ganhando exatamente a mesma largura visual extra que as outras colunas ganham ao se estender para a esquerda.
 
 ### Arquivo: `src/components/PortfolioSection.tsx`
 
-- Remover o `gap-y-6` do grid e controlar o espacamento manualmente (o gap horizontal interfere com o overlap)
-- Usar `gap-0` no grid para que a margem negativa funcione corretamente
-- Adicionar um `marginRight` negativo na coluna 1 (ou ajustar a escala) para que ela ocupe o mesmo espaco visual que as demais
-- Alternativa mais simples e robusta: aplicar `scale` na coluna 1 para que ela cresca proporcionalmente, ou reduzir a margem negativa e compensar com padding
+- Remover o `transform: "scale(1.2)"` e `transformOrigin` da coluna 0
+- Adicionar `marginRight: "-1.5rem"` quando `col === 0`
+- Manter `marginLeft: "-1.5rem"` para `col !== 0`
 
-**Abordagem escolhida**: Aumentar levemente a escala (`scale`) dos cards da coluna 1 para que fiquem proporcionais aos demais visualmente. Algo como `scale: 1.05` ou similar nos items de `col === 0`.
-
-### Detalhes tecnicos
-
-No `PortfolioSection.tsx`, dentro do map, adicionar uma condicao:
+Resultado: todas as 4 colunas ocupam visualmente a mesma largura, sem distorcao de escala.
 
 ```text
-col === 0 ? { transform: "scale(1.05)", transformOrigin: "bottom left" } : {}
+Antes (scale):  Card 1 ampliado mas grid aloca mesma largura = transborda/desalinha
+Depois (margin): Card 1 se estende 1.5rem pra direita = mesma largura visual das outras
 ```
-
-Isso fara os cards da coluna 1 crescerem 5% proporcionalmente, alinhando visualmente com os outros cards que "ganham" espaco pelo overlap. O `transformOrigin: "bottom left"` garante que o crescimento aconteca para a direita e para cima, mantendo o alinhamento pela base.
 
