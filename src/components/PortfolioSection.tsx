@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Rocket, Loader2 } from "lucide-react";
+import { Rocket, Loader2 } from "lucide-react";
+import WhatsAppIcon from "./icons/WhatsAppIcon";
 import PortfolioCard from "./PortfolioCard";
 import PortfolioFilters from "./PortfolioFilters";
 import { useProjects } from "@/hooks/useProjects";
@@ -103,7 +104,7 @@ const PortfolioSection = () => {
             <a href={`https://wa.me/5516991962010?text=${encodeURIComponent("Oi! Vi o portfólio de vocês e gostaria de conversar sobre um projeto.")}`}
               target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm px-5 py-2.5 rounded-full gradient-bg text-primary-foreground font-body hover:opacity-90 transition-opacity shadow-lg shadow-primary/20">
-              <MessageCircle className="w-4 h-4" /> Chamar no WhatsApp
+              <WhatsAppIcon className="w-4 h-4" /> Chamar no WhatsApp
             </a>
           </motion.div>
         ) : (
