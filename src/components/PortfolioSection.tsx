@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Rocket } from "lucide-react";
 import PortfolioCard from "./PortfolioCard";
 import PortfolioFilters from "./PortfolioFilters";
@@ -105,34 +105,37 @@ const PortfolioSection = () => {
             </a>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-6 items-end">
-            {filtered.map((project, i) => {
-              const col = i % 4;
-              const zIndex = 4 - col;
+          <AnimatePresence mode="popLayout">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-6 items-end">
+              {filtered.map((project, i) => {
+                const col = i % 4;
+                const zIndex = 4 - col;
 
-              return (
-                <motion.div
-                  key={project.slug}
-                  className="relative transition-none"
-                  style={{
-                    zIndex: hoveredSlug === project.slug ? 100 : zIndex,
-                    ...(col === 0
-                      ? { marginRight: "-1.5rem" }
-                      : { marginLeft: "-1.5rem" }),
-                  }}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.08 }}
-                  whileHover={{ scale: 1.03 }}
-                  onHoverStart={() => setHoveredSlug(project.slug)}
-                  onHoverEnd={() => setHoveredSlug(null)}
-                >
-                  <PortfolioCard project={project} />
-                </motion.div>
-              );
-            })}
-          </div>
+                return (
+                  <motion.div
+                    key={project.slug}
+                    layout
+                    className="relative transition-none"
+                    style={{
+                      zIndex: hoveredSlug === project.slug ? 100 : zIndex,
+                      ...(col === 0
+                        ? { marginRight: "-1.5rem" }
+                        : { marginLeft: "-1.5rem" }),
+                    }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.3, delay: i * 0.03 }}
+                    whileHover={{ scale: 1.03 }}
+                    onHoverStart={() => setHoveredSlug(project.slug)}
+                    onHoverEnd={() => setHoveredSlug(null)}
+                  >
+                    <PortfolioCard project={project} />
+                  </motion.div>
+                );
+              })}
+            </div>
+          </AnimatePresence>
         )}
       </div>
     </section>
