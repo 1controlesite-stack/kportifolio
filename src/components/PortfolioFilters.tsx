@@ -33,16 +33,16 @@ const PortfolioFilters = ({
   }, [projects]);
 
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mb-12">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-12">
       {/* Search bar */}
-      <div className="relative flex-1 max-w-sm">
+      <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Buscar projetos..."
-          className="w-full h-9 pl-9 pr-8 rounded-full bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground font-body focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
+          className="w-full h-11 pl-9 pr-8 rounded-full bg-muted border border-border text-base text-foreground placeholder:text-muted-foreground font-body focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
         />
         {searchQuery && (
           <button
@@ -96,11 +96,11 @@ const PortfolioFilters = ({
                 <ChevronDown className="w-3 h-3" />
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-48 p-0 bg-popover border-border z-50" align="start" sideOffset={6}>
+            <PopoverContent className="w-56 p-0 bg-popover border-border z-50" align="start" sideOffset={6}>
               <Command className="bg-popover">
                 <CommandInput placeholder="Buscar categoria..." className="text-xs" />
                 <CommandList>
-                  <CommandEmpty className="text-xs py-4">Nenhuma encontrada.</CommandEmpty>
+                  <CommandEmpty className="text-sm py-4">Nenhuma encontrada.</CommandEmpty>
                   <CommandGroup>
                     {overflow.map((cat) => (
                       <CommandItem
