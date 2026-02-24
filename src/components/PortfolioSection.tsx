@@ -8,6 +8,7 @@ import { projects } from "@/data/projects";
 const PortfolioSection = () => {
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
+  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     let result = projects;
@@ -104,9 +105,9 @@ const PortfolioSection = () => {
               return (
                 <motion.div
                   key={project.slug}
-                  className="relative hover:z-[100] transition-none"
+                  className="relative transition-none"
                   style={{
-                    zIndex,
+                    zIndex: hoveredSlug === project.slug ? 100 : zIndex,
                     ...(col === 0
                       ? { marginRight: "-1.5rem" }
                       : { marginLeft: "-1.5rem" }),
@@ -116,6 +117,8 @@ const PortfolioSection = () => {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.08 }}
                   whileHover={{ scale: 1.03 }}
+                  onHoverStart={() => setHoveredSlug(project.slug)}
+                  onHoverEnd={() => setHoveredSlug(null)}
                 >
                   <PortfolioCard project={project} />
                 </motion.div>
