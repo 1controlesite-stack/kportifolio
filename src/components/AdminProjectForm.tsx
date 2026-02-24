@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import ImageUpload from "@/components/ImageUpload";
 import {
   useAdminProject,
   useCreateProject,
@@ -174,13 +175,19 @@ const AdminProjectForm = ({ projectId, onBack }: AdminProjectFormProps) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <Label>URL da imagem</Label>
-            <Input {...register("image")} />
+            <ImageUpload
+              label="Imagem principal"
+              value={watch("image")}
+              onUpload={(url) => setValue("image", url, { shouldValidate: true })}
+            />
             {errors.image && <p className="text-xs text-destructive mt-1">{errors.image.message}</p>}
           </div>
           <div>
-            <Label>Imagem showcase (opcional)</Label>
-            <Input {...register("showcase_image")} />
+            <ImageUpload
+              label="Imagem showcase (opcional)"
+              value={watch("showcase_image")}
+              onUpload={(url) => setValue("showcase_image", url)}
+            />
           </div>
         </div>
 

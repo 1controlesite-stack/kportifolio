@@ -129,10 +129,11 @@ const PortfolioSection = () => {
                         ? { marginRight: "-1.5rem" }
                         : { marginLeft: "-1.5rem" }),
                     }}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.3, delay: i * 0.03 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{ duration: 0.5, delay: i * 0.08 }}
                     whileHover={{ scale: 1.03 }}
                     onHoverStart={() => setHoveredSlug(project.slug)}
                     onHoverEnd={() => setHoveredSlug(null)}
