@@ -68,29 +68,34 @@ const PortfolioSection = () => {
           viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          {filtered.map((project, i) => (
-            <motion.div
-              key={project.slug}
-              className="relative"
-              style={{
-                marginTop: i >= 3 ? "-2rem" : "0",
-                marginLeft: i % 3 !== 0 ? "-0.75rem" : "0",
-                zIndex: filtered.length - i,
-              }}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              whileHover={{ zIndex: 50 }}
-            >
-              <MonitorMockup
-                image={project.image}
-                title={project.title}
-                slug={project.slug}
-                color={TAB_COLORS[i % TAB_COLORS.length]}
-              />
-            </motion.div>
-          ))}
+          {filtered.map((project, i) => {
+            const row = Math.floor(i / 3);
+            // Row 0 = back (z:1), Row 1 = middle (z:2), Row 2 = front (z:3)
+            const rowZ = (row + 1) * 10;
+            return (
+              <motion.div
+                key={project.slug}
+                className="relative"
+                style={{
+                  marginTop: row > 0 ? "-3rem" : "0",
+                  marginLeft: i % 3 !== 0 ? "-0.5rem" : "0",
+                  zIndex: rowZ,
+                }}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                whileHover={{ zIndex: 100 }}
+              >
+                <MonitorMockup
+                  image={project.image}
+                  title={project.title}
+                  slug={project.slug}
+                  color={TAB_COLORS[i % TAB_COLORS.length]}
+                />
+              </motion.div>
+            );
+          })}
         </motion.div>
       </div>
     </section>
