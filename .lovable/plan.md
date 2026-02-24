@@ -1,56 +1,38 @@
 
 
-# Upload de Imagens no Admin + Animacao de Entrada no Portfolio
+# Corrigir login e carregamento infinito do painel admin
 
-## Parte 1: Upload de Imagens no Formulario Admin
+## Problema
 
-O bucket `project-images` ja existe e e publico. Precisamos adicionar RLS policies para permitir uploads por admins e criar o componente de upload.
+As politicas de seguranca (RLS) na tabela `projects` estao configuradas como **RESTRICTIVE** (restritivas). No PostgreSQL, quando todas as politicas sao restritivas, TODAS precisam ser verdadeiras simultaneamente para permitir acesso. 
 
-### 1.1 Migracao SQL - RLS para Storage
+Isso significa que para um admin fazer SELECT, tanto a politica "published = true" quanto "has_role admin" precisam passar ao mesmo tempo. Resultado: o admin so ve projetos publicados, e a query do painel admin (que busca TODOS os projetos) pode retornar resultados incompletos ou travar.
 
-Criar politicas no `storage.objects` para o bucket `project-images`:
-- **SELECT** publico (imagens sao publicas)
-- **INSERT/UPDATE/DELETE** somente para usuarios com role `admin`
+O mesmo problema afeta INSERT, UPDATE e DELETE -- todas sao restritivas, o que pode bloquear operacoes.
 
-### 1.2 Componente `ImageUpload`
+## Solucao
 
-Novo arquivo `src/components/ImageUpload.tsx`:
-- Input de arquivo com drag-and-drop visual
-- Preview da imagem selecionada
-- Upload para o bucket `project-images` via Supabase Storage SDK
-- Gera nome unico com timestamp + random string
-- Retorna a URL publica apos upload
-- Mostra progresso/loading durante upload
-- Aceita prop `onUpload(url: string)` para integrar com o formulario
-
-### 1.3 Atualizar `AdminProjectForm.tsx`
-
-- Substituir os campos de texto "URL da imagem" e "Imagem showcase" por:
-  - Componente `ImageUpload` que faz upload e preenche o campo automaticamente
-  - Manter o campo de texto como fallback (URL manual)
-  - Preview da imagem atual ao editar um projeto
-- Ajustar o schema Zod: campo `image` aceita string vazia durante upload (validar no submit)
-
-## Parte 2: Animacao de Entrada nos Cards do Portfolio
-
-### 2.1 Atualizar `PortfolioSection.tsx`
-
-Adicionar animacao `whileInView` nos cards para a primeira vez que aparecem na tela:
-- Usar `initial={{ opacity: 0, y: 40 }}` combinado com `whileInView={{ opacity: 1, y: 0 }}`
-- `viewport={{ once: true, margin: "-50px" }}` para disparar um pouco antes do card entrar na tela
-- Manter o stagger existente com `delay: i * 0.08` para a entrada inicial
-- Preservar as animacoes de `AnimatePresence` ja existentes para filtragem (sem conflito, pois `once: true` so dispara na primeira vez)
-
----
-
-## Detalhes Tecnicos
-
-### Arquivos novos
-- `src/components/ImageUpload.tsx`
-
-### Arquivos modificados
-- `src/components/AdminProjectForm.tsx` - integrar ImageUpload nos campos de imagem
-- `src/components/PortfolioSection.tsx` - adicionar whileInView nos cards
+Recriar todas as politicas da tabela `projects` como **PERMISSIVE** (o padrao do PostgreSQL). Com politicas permissivas, basta UMA delas ser verdadeira para permitir o acesso.
 
 ### Migracao SQL
-- RLS policies em `storage.objects` para bucket `project-images`
+
+Uma unica migracao que:
+
+1. Remove as 5 politicas restritivas atuais
+2. Recria as mesmas 5 politicas como PERMISSIVE:
+   - **SELECT**: "Anyone can view published projects" -- `published = true`
+   - **SELECT**: "Admins can view all projects" -- `has_role(auth.uid(), 'admin')`
+   - **INSERT**: "Admins can insert projects" -- `has_role(auth.uid(), 'admin')`
+   - **UPDATE**: "Admins can update projects" -- `has_role(auth.uid(), 'admin')`
+   - **DELETE**: "Admins can delete projects" -- `has_role(auth.uid(), 'admin')`
+
+### Resultado esperado
+
+- Login continua funcionando (ja funciona -- retorna 200)
+- Admin consegue ver TODOS os projetos no painel (publicados e rascunhos)
+- Admin consegue criar, editar, excluir e publicar/despublicar projetos
+- Usuarios anonimos continuam vendo apenas projetos publicados
+
+### Arquivos modificados
+
+Nenhum arquivo de codigo precisa mudar. Apenas uma migracao SQL.
