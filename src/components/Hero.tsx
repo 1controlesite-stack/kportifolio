@@ -33,7 +33,7 @@ const Hero = () => {
           className="absolute inset-0 z-0"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
+          transition={{ duration: 2.5, ease: "easeOut" }}
         >
           <video
             ref={videoRef}
@@ -42,7 +42,7 @@ const Hero = () => {
             loop
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
             aria-hidden="true"
             className="w-full h-full object-cover"
           />
