@@ -83,7 +83,7 @@ const Hero = () => {
         <div
           className="absolute bottom-0 left-0 right-0 h-[15vh] z-20 pointer-events-none"
           style={{
-            background: "linear-gradient(to bottom, transparent, hsl(228 33% 97%))",
+            background: "linear-gradient(to bottom, transparent, hsl(var(--background)))",
           }}
         />
       </div>
