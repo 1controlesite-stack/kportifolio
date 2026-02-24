@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Search, ChevronDown, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
-import type { Project } from "@/data/projects";
+import type { Project } from "@/hooks/useProjects";
 
 interface PortfolioFiltersProps {
   projects: Project[];

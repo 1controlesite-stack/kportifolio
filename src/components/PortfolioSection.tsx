@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Rocket } from "lucide-react";
+import { MessageCircle, Rocket, Loader2 } from "lucide-react";
 import PortfolioCard from "./PortfolioCard";
 import PortfolioFilters from "./PortfolioFilters";
-import { projects } from "@/data/projects";
+import { useProjects } from "@/hooks/useProjects";
 
 const PortfolioSection = () => {
+  const { data: projects = [], isLoading } = useProjects();
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
@@ -25,7 +26,7 @@ const PortfolioSection = () => {
       );
     }
     return result;
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, projects]);
 
   return (
     <section id="projetos" className="relative py-24 md:py-32 px-4 section-light overflow-hidden">
@@ -38,6 +39,12 @@ const PortfolioSection = () => {
       />
 
       <div className="relative z-20 max-w-7xl mx-auto">
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          </div>
+        ) : (
+        <>
         <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}
@@ -136,6 +143,8 @@ const PortfolioSection = () => {
               })}
             </div>
           </AnimatePresence>
+        )}
+        </>
         )}
       </div>
     </section>
