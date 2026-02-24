@@ -1,55 +1,14 @@
-import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import logo from "@/assets/logo.png";
-import heroVideo from "@/assets/hero-bg.mp4";
-
-const VIDEO_START = 2.5;
+import NetworkParticles from "./NetworkParticles";
 
 const Hero = () => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.currentTime = VIDEO_START;
-    const onLoop = () => { video.currentTime = VIDEO_START; };
-    video.addEventListener("seeking", () => {});
-    video.addEventListener("timeupdate", () => {
-      if (video.currentTime < VIDEO_START && !video.seeking) {
-        video.currentTime = VIDEO_START;
-      }
-    });
-    video.addEventListener("seeked", () => {});
-    // When video loops back to 0, jump to start offset
-    video.addEventListener("play", () => { if (video.currentTime < VIDEO_START) video.currentTime = VIDEO_START; });
-    return () => {};
-  }, []);
   return (
     <section className="relative h-screen">
       <div className="h-full flex items-center justify-center overflow-hidden">
-      {/* Video background with fade-in */}
-        <motion.div
-          className="absolute inset-0 z-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 2.5, ease: "easeOut" }}
-        >
-          <video
-            ref={videoRef}
-            src={heroVideo}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="metadata"
-            aria-hidden="true"
-            className="w-full h-full object-cover"
-          />
-        </motion.div>
-
-        {/* Overlay */}
-        <div className="absolute inset-0 z-[1] bg-black/65" />
+        {/* Particle background */}
+        <NetworkParticles />
 
         {/* Tech frame */}
         <motion.div
@@ -58,14 +17,9 @@ const Hero = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, delay: 1.2, ease: "easeOut" }}
         >
-          {/* Corner marks */}
-          {/* Top-left */}
           <div className="absolute -top-px -left-px w-6 h-6 border-t-2 border-l-2 border-[hsl(var(--kenkya-purple))]" />
-          {/* Top-right */}
           <div className="absolute -top-px -right-px w-6 h-6 border-t-2 border-r-2 border-[hsl(var(--kenkya-cyan))]" />
-          {/* Bottom-left */}
           <div className="absolute -bottom-px -left-px w-6 h-6 border-b-2 border-l-2 border-[hsl(var(--kenkya-cyan))]" />
-          {/* Bottom-right */}
           <div className="absolute -bottom-px -right-px w-6 h-6 border-b-2 border-r-2 border-[hsl(var(--kenkya-purple))]" />
         </motion.div>
 
@@ -125,7 +79,7 @@ const Hero = () => {
           <ChevronDown className="w-6 h-6 animate-scroll-hint" />
         </motion.div>
 
-        {/* Transition gradient to next section */}
+        {/* Transition gradient */}
         <div
           className="absolute bottom-0 left-0 right-0 h-[30vh] z-20 pointer-events-none"
           style={{
