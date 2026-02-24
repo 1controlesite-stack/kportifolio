@@ -62,11 +62,7 @@ const PortfolioSection = () => {
 
         {/* 3-column grid with overlap */}
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-x-[-16px] gap-y-[-24px]"
-          style={{
-            gap: "0",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-0"
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-50px" }}
