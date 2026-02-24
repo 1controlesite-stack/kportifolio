@@ -1,5 +1,5 @@
 import Hero from "@/components/Hero";
-import ProjectsSection from "@/components/ProjectsSection";
+import PortfolioSection from "@/components/PortfolioSection";
 import ContactFooter from "@/components/ContactFooter";
 
 const Index = () => {
@@ -7,7 +7,7 @@ const Index = () => {
     <>
       <main>
         <Hero />
-        <ProjectsSection />
+        <PortfolioSection />
         <ContactFooter />
       </main>
     </>
