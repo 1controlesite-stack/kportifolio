@@ -14,11 +14,11 @@ const PortfolioCard = ({ project }: PortfolioCardProps) => {
       to={`/projeto/${project.slug}`}
       className="group block relative rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
     >
-      <div className="relative aspect-[4/3] bg-background">
+      <div className="relative">
         <img
           src={displayImage}
           alt={project.title}
-          className="w-full h-full object-contain"
+          className="w-full h-auto block"
           loading="lazy"
         />
         {/* Hover overlay */}
