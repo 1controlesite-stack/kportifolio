@@ -1,36 +1,38 @@
 
 
-# Vídeo do Hero: loop automático sem sync com scroll
-
-## Problema atual
-O vídeo de 8 segundos está sincronizado ao scroll (scrub), o que obriga o usuário a rolar por `300vh` inteiros para o vídeo terminar -- travando a experiência de navegação.
-
-## Solução
-Remover toda a lógica de scrub/seek e deixar o vídeo rodando em **loop automático** como fundo cinematográfico. O scroll continua livre e fluido.
+# Hero: fade-in no vídeo, overlay mais escuro e moldura tech
 
 ## Mudanças em `src/components/Hero.tsx`
 
-### Remover
-- Constante `SEEK_EPSILON`
-- Refs: `rafRef`, `pendingProgressRef`, `videoReadyRef`, `lastSeekedTimeRef`
-- `useEffect` do gate de metadata
-- Função `scheduleSeek` e `useCallback`
-- `useEffect` de cleanup do rAF
-- `useMotionValueEvent` do scrub
-- Import de `useCallback`
+### 1. Fade-in suave no vídeo
+- Envolver o container do vídeo (`div.absolute.inset-0.z-0`) em um `motion.div` com animação de opacidade de 0 para 1, duração ~1.5s, para o vídeo aparecer gradualmente ao carregar.
 
-### Alterar
-- Reduzir a altura da seção de `h-[300vh]` para `h-screen` (uma tela, sem scroll estendido)
-- Remover `sticky top-0` do container interno (desnecessário com `h-screen`)
-- Adicionar `autoPlay`, `loop` e `muted` no `<video>` para rodar continuamente
-- Remover a `ref` do vídeo (não é mais necessária)
-- Remover `useMotionValueEvent` do import do framer-motion
-- Remover transforms que dependiam do scroll longo (`bgScale`, `contentY`, `contentOpacity`) ou simplifica-los para animacoes de entrada
-- Manter o gradiente de transicao inferior como elemento estatico (sem motion transform)
+### 2. Escurecer mais o overlay
+- Alterar o overlay de `bg-black/40` para `bg-black/65`, tornando o vídeo um detalhe de fundo sutil em vez do foco principal.
 
-### Resultado
-- Video roda em loop infinito como background
-- Seção ocupa exatamente 1 viewport (`100vh`)
-- Scroll flui naturalmente para a próxima seção
-- Zero lógica de seek/rAF -- componente muito mais simples
+### 3. Moldura tech ao redor do Hero
+- Adicionar uma borda interna estilizada usando um elemento `div` com `border` fina (1px) em cor sutil (`white/10` ou gradiente purple/cyan) com `inset` de ~16-24px, criando uma moldura retangular flutuante dentro do hero.
+- Cantos com detalhes tech: pequenos marcadores nos 4 cantos da moldura (linhas em L) usando pseudo-elementos ou divs posicionadas, com cor do gradiente da marca (purple -> cyan).
+- A moldura terá animação de entrada (fade-in + scale sutil) com delay para aparecer depois do conteúdo.
+
+## Detalhes técnicos
+
+```text
++--------------------------------------------------+
+|  section (h-screen)                               |
+|                                                   |
+|    +-- moldura tech (inset ~20px, border 1px) --+ |
+|    |                                             | |
+|    |         [logo]                              | |
+|    |    Design & Desenvolvimento                 | |
+|    |         Kenkya                              | |
+|    |       [Ver Projetos]                        | |
+|    |                                             | |
+|    +-- corner marks nos 4 cantos ---------------+ |
+|                                                   |
++--------------------------------------------------+
+```
+
+### Arquivos alterados
+- `src/components/Hero.tsx` -- todas as mudanças concentradas aqui
 
