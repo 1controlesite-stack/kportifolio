@@ -24,7 +24,11 @@ const PortfolioCard = ({ project }: PortfolioCardProps) => {
         />
 
         {/* Gradient overlay — always visible at bottom, full on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent opacity-85 group-hover:opacity-95 transition-opacity duration-400" />
+        {/* Full overlay — only on hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent opacity-0 group-hover:opacity-90 transition-opacity duration-400" />
+
+        {/* Subtle bottom gradient — always visible for title legibility */}
+        <div className="absolute bottom-0 inset-x-0 h-1/2 bg-gradient-to-t from-background/70 via-background/30 to-transparent pointer-events-none" />
 
         {/* Content — slides up on hover */}
         <div className="absolute inset-x-0 bottom-0 p-4 flex flex-col justify-end translate-y-2 group-hover:translate-y-0 transition-transform duration-400">
