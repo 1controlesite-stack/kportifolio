@@ -45,7 +45,7 @@ const PortfolioCard = ({ project }: PortfolioCardProps) => {
           </div>
 
           {/* Title — always visible */}
-          <h3 className="font-display text-sm font-semibold text-foreground tracking-wide leading-tight mb-1 drop-shadow-md">
+          <h3 className="font-display text-sm font-semibold text-foreground tracking-wide leading-tight mb-1 [text-shadow:_0_1px_8px_rgb(0_0_0_/_90%),_0_0_2px_rgb(0_0_0_/_60%)]">
             {project.title}
           </h3>
 
