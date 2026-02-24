@@ -1,107 +1,56 @@
 
-# Integracao com Supabase + Painel Admin para Projetos
 
-## Visao Geral
+# Upload de Imagens no Admin + Animacao de Entrada no Portfolio
 
-Migrar os projetos do arquivo estatico `src/data/projects.ts` para o banco de dados Supabase. Criar um painel administrativo protegido por autenticacao onde o admin pode criar, editar, excluir e controlar a visibilidade dos projetos. Somente projetos marcados como "publicados" aparecerao no portfolio publico.
+## Parte 1: Upload de Imagens no Formulario Admin
 
-## Passo 1: Conectar Supabase
+O bucket `project-images` ja existe e e publico. Precisamos adicionar RLS policies para permitir uploads por admins e criar o componente de upload.
 
-Antes de tudo, voce precisara conectar o Supabase ao projeto. O Lovable vai exibir um prompt para voce criar ou selecionar uma conexao com o Supabase.
+### 1.1 Migracao SQL - RLS para Storage
 
-## Passo 2: Estrutura do Banco de Dados
+Criar politicas no `storage.objects` para o bucket `project-images`:
+- **SELECT** publico (imagens sao publicas)
+- **INSERT/UPDATE/DELETE** somente para usuarios com role `admin`
 
-### Tabela `projects`
+### 1.2 Componente `ImageUpload`
 
-| Coluna | Tipo | Descricao |
-|---|---|---|
-| id | uuid (PK) | Identificador unico |
-| slug | text (unique) | URL amigavel |
-| title | text | Nome do projeto |
-| description | text | Descricao curta |
-| tags | text[] | Array de categorias |
-| image | text | URL da imagem principal |
-| showcase_image | text (nullable) | Imagem de vitrine |
-| live_url | text (nullable) | Link do projeto ao vivo |
-| challenge | text | Texto "O Desafio" |
-| process | text | Texto "O Processo" |
-| solution | text | Texto "A Solucao" |
-| result | text | Texto "O Resultado" |
-| published | boolean (default false) | Controla visibilidade publica |
-| display_order | integer (default 0) | Ordem de exibicao |
-| created_at | timestamptz | Data de criacao |
-| updated_at | timestamptz | Data de atualizacao |
+Novo arquivo `src/components/ImageUpload.tsx`:
+- Input de arquivo com drag-and-drop visual
+- Preview da imagem selecionada
+- Upload para o bucket `project-images` via Supabase Storage SDK
+- Gera nome unico com timestamp + random string
+- Retorna a URL publica apos upload
+- Mostra progresso/loading durante upload
+- Aceita prop `onUpload(url: string)` para integrar com o formulario
 
-### Tabela `user_roles` (para controle de acesso admin)
+### 1.3 Atualizar `AdminProjectForm.tsx`
 
-Seguindo o padrao de seguranca recomendado com enum `app_role`, tabela separada e funcao `has_role` com SECURITY DEFINER.
+- Substituir os campos de texto "URL da imagem" e "Imagem showcase" por:
+  - Componente `ImageUpload` que faz upload e preenche o campo automaticamente
+  - Manter o campo de texto como fallback (URL manual)
+  - Preview da imagem atual ao editar um projeto
+- Ajustar o schema Zod: campo `image` aceita string vazia durante upload (validar no submit)
 
-### Politicas RLS
+## Parte 2: Animacao de Entrada nos Cards do Portfolio
 
-- **SELECT publico**: qualquer pessoa pode ver projetos com `published = true`
-- **INSERT/UPDATE/DELETE**: somente usuarios com role `admin`
+### 2.1 Atualizar `PortfolioSection.tsx`
 
-## Passo 3: Autenticacao Admin
+Adicionar animacao `whileInView` nos cards para a primeira vez que aparecem na tela:
+- Usar `initial={{ opacity: 0, y: 40 }}` combinado com `whileInView={{ opacity: 1, y: 0 }}`
+- `viewport={{ once: true, margin: "-50px" }}` para disparar um pouco antes do card entrar na tela
+- Manter o stagger existente com `delay: i * 0.08` para a entrada inicial
+- Preservar as animacoes de `AnimatePresence` ja existentes para filtragem (sem conflito, pois `once: true` so dispara na primeira vez)
 
-- Pagina `/login` com email + senha usando Supabase Auth
-- Rota protegida `/admin` que verifica se o usuario logado tem role `admin`
-- Redirect automatico para login se nao autenticado
+---
 
-## Passo 4: Painel Admin (`/admin`)
+## Detalhes Tecnicos
 
-### Listagem de projetos
-- Tabela com todos os projetos (publicados e rascunhos)
-- Toggle de publicacao rapido (switch published on/off)
-- Botoes de editar e excluir
-- Drag-and-drop ou campo numerico para reordenar
+### Arquivos novos
+- `src/components/ImageUpload.tsx`
 
-### Formulario de criar/editar projeto
-- Formulario com todos os campos da tabela
-- Upload de imagem (Supabase Storage)
-- Preview antes de publicar
-- Validacao com Zod + React Hook Form
+### Arquivos modificados
+- `src/components/AdminProjectForm.tsx` - integrar ImageUpload nos campos de imagem
+- `src/components/PortfolioSection.tsx` - adicionar whileInView nos cards
 
-## Passo 5: Adaptar o Frontend Publico
-
-### Mudancas nos componentes existentes
-
-- **`src/data/projects.ts`**: manter a interface `Project` mas adicionar campos `published` e `display_order`. Exportar um hook `useProjects()` que busca do Supabase em vez do array estatico
-- **`src/components/PortfolioSection.tsx`**: trocar `import { projects }` por `useProjects()` hook. Adicionar loading state
-- **`src/pages/ProjectDetail.tsx`**: buscar projeto individual do Supabase pelo slug
-- **`src/components/PortfolioFilters.tsx`**: sem mudancas (ja recebe projects como prop)
-
-## Passo 6: Novos Arquivos
-
-```text
-src/
-  integrations/supabase/   (gerado pelo conector)
-  hooks/
-    useProjects.ts         -- hook para buscar projetos publicados
-    useAdminProjects.ts    -- hook para CRUD completo (admin)
-    useAuth.ts             -- hook de autenticacao
-  pages/
-    Login.tsx              -- pagina de login
-    Admin.tsx              -- painel admin
-  components/
-    AdminRoute.tsx         -- wrapper de rota protegida
-    AdminProjectForm.tsx   -- formulario de projeto
-    AdminProjectList.tsx   -- tabela de projetos
-```
-
-## Passo 7: Rotas
-
-```text
-/          -- pagina publica (portfolio)
-/projeto/:slug -- detalhe do projeto (publico)
-/login     -- login do admin
-/admin     -- painel admin (protegido)
-```
-
-## Resumo da Ordem de Implementacao
-
-1. Conectar Supabase ao projeto
-2. Criar tabelas, enum, funcao has_role e politicas RLS
-3. Criar autenticacao (login page + hook + rota protegida)
-4. Criar painel admin com CRUD de projetos
-5. Adaptar frontend publico para buscar do banco
-6. Migrar dados estaticos atuais como seed inicial
+### Migracao SQL
+- RLS policies em `storage.objects` para bucket `project-images`
