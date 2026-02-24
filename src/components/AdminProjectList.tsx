@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Pencil, Trash2, Plus, MoreHorizontal, Search } from "lucide-react";
+import { Pencil, Trash2, Plus, MoreHorizontal, Search, Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -14,9 +14,11 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import {
   Pagination, PaginationContent, PaginationItem,
   PaginationLink, PaginationNext, PaginationPrevious,
@@ -70,6 +72,7 @@ const AdminProjectList = ({ onEdit, onNew }: AdminProjectListProps) => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [catOpen, setCatOpen] = useState(false);
 
   const filtered = useMemo(() => {
     if (!projects) return [];
@@ -140,17 +143,36 @@ const AdminProjectList = ({ onEdit, onNew }: AdminProjectListProps) => {
                 onChange={(e) => handleSearchChange(e.target.value)} className="pl-9" />
             </div>
             {categories.length > 0 && (
-              <Select value={categoryFilter} onValueChange={handleCategoryChange}>
-                <SelectTrigger className="w-40 h-10">
-                  <SelectValue placeholder="Categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as categorias</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={catOpen} onOpenChange={setCatOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" role="combobox" aria-expanded={catOpen} className="w-48 justify-between h-10">
+                    {categoryFilter === "all"
+                      ? "Todas as categorias"
+                      : categories.find((c) => c.id === categoryFilter)?.name ?? "Categoria"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-0">
+                  <Command>
+                    <CommandInput placeholder="Buscar categoria..." />
+                    <CommandList>
+                      <CommandEmpty>Nenhuma categoria encontrada</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem value="all" onSelect={() => { handleCategoryChange("all"); setCatOpen(false); }}>
+                          <Check className={cn("mr-2 h-4 w-4", categoryFilter === "all" ? "opacity-100" : "opacity-0")} />
+                          Todas as categorias
+                        </CommandItem>
+                        {categories.map((cat) => (
+                          <CommandItem key={cat.id} value={cat.name} onSelect={() => { handleCategoryChange(cat.id); setCatOpen(false); }}>
+                            <Check className={cn("mr-2 h-4 w-4", categoryFilter === cat.id ? "opacity-100" : "opacity-0")} />
+                            {cat.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             )}
           </div>
           <Button onClick={onNew} size="sm">
