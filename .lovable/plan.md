@@ -1,78 +1,60 @@
 
-# Ajustes na SectionTransition: Sobreposicao e Flash
 
-## Problemas identificados no print
+# Correcao: Feixes com angulo FIXO + Flash sem cobrir conteudo
 
-1. **A secao de transicao esta "separada"** -- ela fica como um bloco independente entre Hero e Portfolio, em vez de se mesclar com ambas
-2. **A bola do flash fica visivel antes do impacto** -- o radial gradient azul aparece durante a aproximacao dos feixes, quebrando a ilusao
+## Problema 1: Feixes "abrindo" em vez de brilho viajando
 
-## Solucao
+O bug esta no `transformOrigin`. Atualmente:
+- Feixe esquerdo: `transformOrigin: "right center"` -- a ponta direita (centro) fica fixa e o feixe cresce para a ESQUERDA
+- Feixe direito: `transformOrigin: "left center"` -- a ponta esquerda (centro) fica fixa e o feixe cresce para a DIREITA
 
-### 1. Sobreposicao com as secoes adjacentes
+Isso faz parecer que o V esta "abrindo" porque os feixes nascem do centro e vao para fora.
 
-Usar `negative margin` no topo e no fundo + `z-index` alto para que a SectionTransition:
-- Suba sobre a parte inferior do Hero (aprox. -25vh de margin-top)
-- Desça sobre a parte superior do Portfolio (aprox. -25vh de margin-bottom)
-- O ponto de encontro dos feixes (centro vertical da secao) fique exatamente na fronteira Hero/Portfolio
+**Correcao**: inverter as origens para que o brilho viaje dos cantos para o centro:
+- Feixe esquerdo: `transformOrigin: "left center"` -- nasce na extremidade esquerda e avanca ate o centro
+- Feixe direito: `transformOrigin: "right center"` -- nasce na extremidade direita e avanca ate o centro
 
-Isso faz a secao "flutuar" sobre as duas, criando continuidade visual.
+O angulo (20deg / -20deg) permanece FIXO o tempo todo. So o comprimento visivel muda.
 
-Mudancas em `SectionTransition.tsx`:
-- Adicionar `style={{ marginTop: "-25vh", marginBottom: "-25vh" }}` na section
-- Aumentar `z-index` (z-30 ou superior) para ficar por cima do conteudo adjacente
-- Remover `overflow-hidden` para os feixes poderem "sangrar" visualmente
+## Problema 2: Flash/reveal cobrindo conteudo do Portfolio
 
-Remover o gradiente de transicao do Hero (`Hero.tsx`):
-- O div com `h-[15vh]` e gradiente no bottom do Hero ja nao sera necessario pois a SectionTransition cobre essa area diretamente
+A secao tem `z-30` e a camada de revelacao clara (`clipPath circle`) com fundo solido fica POR CIMA do Portfolio. Alem disso o flash em si e muito grande.
 
-### 2. Flash so no impacto (sem bola visivel antes)
+**Correcao**:
+- Adicionar `pointer-events-none` na secao inteira para nao bloquear interacao
+- A camada de revelacao clara nao deve existir como div solido -- em vez disso, usar apenas o flash momentaneo e deixar o fundo do PortfolioSection cuidar da cor clara naturalmente
+- Remover a camada `clipPath circle` completamente -- a transicao visual sera feita pelo proprio overlap (Hero escuro embaixo, Portfolio claro embaixo, a SectionTransition so adiciona os feixes e flash por cima)
+- Reduzir o z-index da secao para `z-20` para nao ficar acima de elementos interativos do Portfolio (que tem filtros com z-110)
 
-O problema e que `flashScale` comeca em `0.3` (ja visivel) e a opacidade sobe gradualmente. Precisa ser um evento pontual:
-
-- Mudar `flashOpacity` de `[0.3, 0.4, 0.5] -> [0, 0.8, 0]` para uma curva mais abrupta: `[0.38, 0.4, 0.45] -> [0, 0.9, 0]`
-- Mudar `flashScale` de `[0.3, 0.5] -> [0.3, 2.5]` para `[0.38, 0.45] -> [0.5, 3]` (comeca maior e mais rapido, sem fase de "crescimento visivel")
-- Reduzir o tamanho base do flash de 400px para 200px -- ele escala ate 3x entao atinge 600px no pico, mas comeca menor e invisivel
-- Trocar o gradiente: remover a borda azul solida e usar mais transparencia nas bordas externas para que a transicao seja suave e nao um circulo definido
-
-## Detalhes tecnicos
+## Mudancas tecnicas
 
 ### `src/components/SectionTransition.tsx`
 
-```
-Section: className="relative min-h-[50vh] z-30" style={{ marginTop: "-25vh", marginBottom: "-25vh", backgroundColor: "transparent" }}
-```
+1. **Inverter `transformOrigin` dos dois feixes**:
+   - Feixe esquerdo: de `"right center"` para `"left center"`
+   - Feixe direito: de `"left center"` para `"right center"`
 
-- Fundo `transparent` em vez de `background` escuro (ele flutua sobre o Hero que ja e escuro)
-- A camada de revelacao clara (`clipPath circle`) continua funcionando normalmente
+2. **Remover a camada de revelacao clara** (o div com `clipPath circle` e `backgroundColor: hsl(228 33% 97%)`):
+   - Essa camada estava cobrindo o conteudo abaixo
+   - O Portfolio ja tem seu proprio fundo claro
 
-Flash central refinado:
-- Tamanho: `w-[200px] h-[200px]` (em vez de 400px)
-- `flashOpacity`: janela estreita `[0.38, 0.4, 0.45]` -> `[0, 0.9, 0]`
-- `flashScale`: `[0.38, 0.45]` -> `[0.5, 3.5]`
-- Gradiente: mais transparente nas bordas -- `radial-gradient(circle, white 0%, hsl(blue/0.6) 30%, transparent 55%)`
+3. **Adicionar `pointer-events-none`** na secao para nao interceptar cliques
 
-### `src/components/Hero.tsx`
+4. **Reduzir z-index** de `z-30` para `z-20`
 
-- Remover o div de gradiente de transicao no bottom (o que tem `h-[15vh]` com linear-gradient) -- ja nao e necessario pois a SectionTransition cobre essa zona
-
-### `src/pages/Index.tsx`
-
-- Sem mudancas (a ordem Hero > SectionTransition > Portfolio ja esta correta)
+5. **Remover a linha final horizontal** -- ela tambem fica "parada" cobrindo conteudo e nao agrega apos remover a revelacao
 
 ## Resultado esperado
 
 ```text
-[Hero escuro - conteudo normal]
+[Hero escuro]
      |
-     |  <-- SectionTransition COMECA AQUI (sobre o Hero, z-30)
-     |       feixes em V descem dos cantos
-     |       
-     |=======  PONTO DE ENCONTRO  ======= <-- fronteira visual Hero/Portfolio
-     |       flash instantaneo (sem bola visivel antes)
-     |       revelacao circular do fundo claro
-     |  <-- SectionTransition TERMINA AQUI (sobre o Portfolio)
+     | brilho viaja da borda esquerda =====>  \
+     | brilho viaja da borda direita  =====>  /   (angulo fixo 20deg)
+     |                                 ** FLASH **
      |
-[Portfolio claro - conteudo normal]
+[Portfolio claro - visivel normalmente, sem nada por cima]
 ```
 
-A transicao deixa de ser um "bloco separado" e passa a ser uma camada que costura as duas secoes.
+Os feixes tem angulo fixo de 140 graus durante toda a animacao. O brilho "corre" das extremidades para o centro. O flash e momentaneo e nao cobre nada depois.
+
