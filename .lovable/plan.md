@@ -1,19 +1,41 @@
 
 
-# Corrigir z-index no Hover dos Cards Sobrepostos
+# Corrigir z-index no Hover -- Problema de Especificidade CSS
 
 ## Problema
 
-Os cards usam `whileHover={{ zIndex: 100, scale: 1.03 }}` do Framer Motion (linha 118 do `PortfolioSection.tsx`). O Framer Motion **interpola numericamente** o `zIndex` (ex: de 1 para 2, 3, 4... ate 100), o que faz o card demorar para aparecer acima dos vizinhos sobrepostos. O scale tambem anima gradualmente, criando a sensacao de "passos".
+O `style={{ zIndex }}` inline tem **prioridade maior** que a classe Tailwind `hover:z-[100]`. Por isso o card nunca sobe de camada no hover -- o estilo inline sempre vence.
 
 ## Solucao
 
-### Arquivo: `src/components/PortfolioSection.tsx` (linha 105-121)
+### Arquivo: `src/components/PortfolioSection.tsx` (linhas 105-121)
 
-1. **Remover `zIndex` do `whileHover`** do Framer Motion -- ele nao deve ser animado gradualmente
-2. **Adicionar classes CSS** no `motion.div` para controlar o z-index instantaneamente via `hover:z-[100]`
-3. **Manter `scale: 1.03`** no `whileHover` mas com `transition` rapida e sem spring
-4. Adicionar `transition-[z-index] duration-0` via CSS para garantir mudanca instantanea
+Remover o `zIndex` do `style` inline e usar um wrapper com CSS que controla ambos os estados:
 
-Resultado: o z-index muda imediatamente no hover (CSS), enquanto o scale anima suavemente (Framer Motion). O card sobreposto aparece por cima dos vizinhos sem atraso.
+- Estado passivo: aplicar o zIndex via classe CSS customizada ou variavel CSS
+- Estado hover: `hover:!z-[100]` com `!important` para sobrescrever, **ou melhor**, mover o zIndex para uma CSS variable e controlá-lo via grupo
+
+A abordagem mais limpa: remover `zIndex` do `style` e usar `className` com o valor dinamico via `style={{ '--z': zIndex }}` + CSS custom, ou simplesmente usar `onHoverStart`/`onHoverEnd` do Framer Motion para setar o zIndex via state.
+
+**Abordagem escolhida (mais simples e confiavel):**
+
+Usar eventos `onHoverStart` e `onHoverEnd` do Framer Motion para alternar o zIndex entre o valor base e 100 instantaneamente, sem animacao:
+
+```text
+const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
+
+// No motion.div:
+style={{
+  zIndex: hoveredSlug === project.slug ? 100 : zIndex,
+  ...margins
+}}
+onHoverStart={() => setHoveredSlug(project.slug)}
+onHoverEnd={() => setHoveredSlug(null)}
+```
+
+Isso garante:
+- z-index muda **instantaneamente** (sem interpolacao)
+- O card fica em primeiro plano **junto com o hover**
+- Sem conflito de especificidade CSS
+- `scale: 1.03` continua animando suavemente via Framer Motion
 
