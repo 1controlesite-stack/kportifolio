@@ -42,7 +42,7 @@ const PortfolioFilters = ({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Buscar projetos..."
-          className="w-full h-11 pl-9 pr-8 rounded-full bg-muted border border-border text-base text-foreground placeholder:text-muted-foreground font-body focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
+          className="w-full h-11 pl-9 pr-8 rounded-full bg-[hsl(var(--sl-input))] border border-[hsl(var(--sl-border))] text-base text-[hsl(var(--sl-fg))] placeholder:text-[hsl(var(--sl-muted))] font-body focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
         />
         {searchQuery && (
           <button
@@ -61,7 +61,7 @@ const PortfolioFilters = ({
           className={`text-xs px-3.5 py-1.5 rounded-full font-body transition-all duration-300 ${
             activeCategory === "Todos"
               ? "gradient-bg text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:text-foreground border border-border"
+              : "bg-[hsl(var(--sl-input))] text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))] border border-[hsl(var(--sl-border))]"
           }`}
         >
           Todos
@@ -74,7 +74,7 @@ const PortfolioFilters = ({
             className={`text-xs px-3.5 py-1.5 rounded-full font-body transition-all duration-300 ${
               activeCategory === cat
                 ? "gradient-bg text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:text-foreground border border-border"
+                : "bg-[hsl(var(--sl-input))] text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))] border border-[hsl(var(--sl-border))]"
             }`}
           >
             {cat}
@@ -89,7 +89,7 @@ const PortfolioFilters = ({
                 className={`text-xs px-3.5 py-1.5 rounded-full font-body transition-all duration-300 inline-flex items-center gap-1 ${
                   overflow.includes(activeCategory)
                     ? "gradient-bg text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground border border-border"
+                    : "bg-[hsl(var(--sl-input))] text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))] border border-[hsl(var(--sl-border))]"
                 }`}
               >
                 {overflow.includes(activeCategory) ? activeCategory : "Mais"}

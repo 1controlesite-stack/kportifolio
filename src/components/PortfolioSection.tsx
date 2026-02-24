@@ -28,8 +28,16 @@ const PortfolioSection = () => {
   }, [activeCategory, searchQuery]);
 
   return (
-    <section id="projetos" className="py-24 md:py-32 px-4 bg-background">
-      <div className="max-w-7xl mx-auto">
+    <section id="projetos" className="relative py-24 md:py-32 px-4 section-light overflow-hidden">
+      {/* Bottom transition gradient — light to dark */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-[20vh] pointer-events-none z-10"
+        style={{
+          background: "linear-gradient(to bottom, transparent, hsl(var(--background)))",
+        }}
+      />
+
+      <div className="relative z-20 max-w-7xl mx-auto">
         <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}
@@ -38,7 +46,7 @@ const PortfolioSection = () => {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-3xl md:text-5xl font-display font-bold gradient-text inline-block mb-4">Projetos</h2>
-          <p className="text-muted-foreground max-w-lg mx-auto">
+          <p className="text-[hsl(var(--sl-muted))] max-w-lg mx-auto">
             Cada projeto é uma história. Clique para conhecer a jornada completa.
           </p>
         </motion.div>
@@ -77,13 +85,13 @@ const PortfolioSection = () => {
               <Rocket className="w-9 h-9 text-accent absolute inset-0 m-auto" />
             </motion.div>
 
-            <h3 className="font-display text-lg font-semibold text-foreground mb-2">
+            <h3 className="font-display text-lg font-semibold text-[hsl(var(--sl-fg))] mb-2">
               Nenhum projeto encontrado
             </h3>
-            <p className="text-foreground/60 font-body text-sm max-w-xs mb-1">
+            <p className="text-[hsl(var(--sl-muted))]/80 font-body text-sm max-w-xs mb-1">
               Ainda não temos um projeto nesse nicho.
             </p>
-            <p className="text-muted-foreground font-body text-xs mb-6">
+            <p className="text-[hsl(var(--sl-muted))] font-body text-xs mb-6">
               Mas o seu pode ser o primeiro! 🚀
             </p>
             <a

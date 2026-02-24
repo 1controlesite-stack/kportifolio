@@ -69,6 +69,15 @@
   .gradient-border {
     border-image: linear-gradient(135deg, hsl(var(--kenkya-purple)), hsl(var(--kenkya-blue)), hsl(var(--kenkya-cyan))) 1;
   }
+
+  .section-light {
+    --sl-bg: 228 33% 97%;
+    --sl-fg: 240 20% 13%;
+    --sl-muted: 220 14% 46%;
+    --sl-border: 220 13% 91%;
+    --sl-input: 220 14% 96%;
+    background-color: hsl(var(--sl-bg));
+  }
 }
 
 /* Animated gradient border for cards */
