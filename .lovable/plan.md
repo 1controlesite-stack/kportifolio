@@ -1,36 +1,54 @@
 
 
-# Ajustes nas particulas do Hero + glow + remover rastro do mouse
+# Efeito "Venom" + Constelações do Zodíaco
 
-## Mudancas
+## Resumo
+Ajustar a física das partículas para atração agressiva ao mouse (estilo Venom) com soltura rápida, e posicionar as partículas iniciais formando as 12 constelações do zodíaco distribuídas pela tela.
 
-### 1. `src/components/NetworkParticles.tsx` -- Ajustes de densidade, velocidade, opacidade e efeito "grudar no mouse"
+## Mudanças em `src/components/NetworkParticles.tsx`
 
-**Densidade e velocidade:**
-- Aumentar particulas: mobile 50, desktop 100
-- Reduzir velocidade base para `0.3` (movimento mais lento e elegante)
+### 1. Constelações do Zodíaco como posições iniciais
 
-**Interacao "grudar no mouse":**
-- Inverter a forca do mouse: em vez de repelir, as particulas serao **atraidas** em direcao ao cursor (forca negativa, puxando para o mouse)
-- Aumentar MOUSE_RADIUS para 150px para uma area de influencia maior
-- Forca de atracao suave para que as particulas "orbitem" perto do cursor sem colapsar nele
+Definir um mapa de coordenadas normalizadas (0-1) para cada uma das 12 constelações:
+- Áries, Touro, Gêmeos, Câncer, Leão, Virgem, Libra, Escorpião, Sagitário, Capricórnio, Aquário, Peixes
+- Cada constelação terá entre 4-8 estrelas (pontos) posicionadas de acordo com o formato real da constelação
+- As 12 constelações serão distribuídas em grid pela tela (4 colunas x 3 linhas, por exemplo)
+- Coordenadas normalizadas escaladas para o tamanho real do canvas
+- Total de partículas será a soma dos pontos de todas as constelações (~60-90 pontos no desktop, reduzido no mobile mostrando apenas 6 constelações)
 
-**Efeito de glow nos pontos:**
-- Antes de desenhar cada particula, aplicar `ctx.shadowBlur` (~8-12px) e `ctx.shadowColor` com a cor da particula
-- Isso cria um halo de luz ao redor de cada ponto, dando profundidade
-- Resetar `shadowBlur = 0` antes de desenhar as linhas (para nao aplicar glow nelas)
+As partículas começam nas posições das estrelas e depois se movem livremente com a física normal -- formando brevemente as constelações antes de se dispersarem.
 
-**Opacidade:**
-- Aumentar opacidade dos pontos de `0.5` para `0.7`
-- Manter linhas em `0.15` (sutis)
+### 2. Física "Venom" -- atração rápida, soltura rápida
 
-### 2. Remover `src/components/CursorEffect.tsx` e sua referencia
+- **Força de atração**: aumentar de `0.4 / dist` para `2.0 / dist`
+- **MOUSE_RADIUS**: aumentar de `150` para `200`
+- **Distância mínima**: reduzir de `5` para `3`
+- **Damping condicional**:
+  - Dentro do raio do mouse: `*= 0.98` (fluido, permite correr até o cursor)
+  - Fora do raio: `*= 0.92` (freia rápido, solta as partículas imediatamente)
+- **Velocidade máxima**: aumentar clamp de `1.5` para `4.0`
 
-- Deletar o arquivo `src/components/CursorEffect.tsx` (rastro de particulas no mouse)
-- Em `src/pages/Index.tsx`: remover o import e o componente `<CursorEffect />`
+### 3. Dados das constelações
 
-## Arquivos alterados
-- `src/components/NetworkParticles.tsx` -- ajustes de fisica, glow, atracao
-- `src/components/CursorEffect.tsx` -- deletar
-- `src/pages/Index.tsx` -- remover import e uso do CursorEffect
+Estrutura de dados com coordenadas relativas para cada signo (exemplo simplificado):
+
+```text
+ARIES:     5 estrelas formando o "V" característico
+TAURUS:    7 estrelas formando o "V" das Híades + chifres
+GEMINI:    6 estrelas dos gêmeos lado a lado
+CANCER:    5 estrelas em forma de "Y" invertido
+LEO:       8 estrelas com a foice e o triângulo
+VIRGO:     7 estrelas em linha angulada
+LIBRA:     5 estrelas formando a balança
+SCORPIO:   8 estrelas com a cauda curva
+SAGITTARIUS: 7 estrelas com o arco
+CAPRICORN: 6 estrelas em triângulo alongado
+AQUARIUS:  6 estrelas em zigue-zague
+PISCES:    6 estrelas em "V" conectado
+```
+
+As constelações são dispostas em uma grade pela viewport, cada uma ocupando uma célula, com leve randomização na posição para parecer natural.
+
+## Arquivo alterado
+- `src/components/NetworkParticles.tsx`
 
