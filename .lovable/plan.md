@@ -1,61 +1,79 @@
 
 
-# Portfólio Kenkya — Web Design & Desenvolvimento
+# Portfólio Kenkya — Plano Simplificado
 
-## Branding
-- **Nome**: Kenkya (kenkya.com.br)
-- **Logo**: O "K" geométrico com gradiente roxo → azul → ciano (será usada no header, hero, favicon e como elemento decorativo)
-- **Paleta de cores derivada da logo**: roxo (#8B5CF6), azul (#3B82F6), ciano (#06B6D4) — gradientes vibrantes como identidade visual do site inteiro
+## Filosofia
+Mínimo de seções. Máximo de experiência. O portfólio é sobre os **projetos** — todo o resto é suporte.
 
----
+## Estrutura Final (apenas 3 seções na home)
 
-## Seções
+### 1. Hero
+- Logo Kenkya animada (scale + fade) + "Kenkya" em gradiente + tagline curta
+- Background escuro com formas geométricas animadas (framer-motion)
+- Cursor interativo com partículas nas cores da marca
+- Scroll indicator sutil
 
-### 1. Hero Section
-- **Logo Kenkya** animada na entrada (scale + fade) como elemento central
-- Nome "Kenkya" com tipografia bold + tagline (ex: "Design & Desenvolvimento Web")
-- Background escuro com gradiente sutil roxo-azul-ciano inspirado na logo
-- Formas geométricas animadas no fundo (triângulos/setas remetendo à forma da logo)
-- Efeito de cursor interativo com partículas nas cores da marca
-- CTA para rolar até os projetos
+### 2. Projetos (seção principal)
+- Grid de 3-5 cards com preview visual e hover zoom
+- Cada card leva a uma rota `/projeto/:slug` com storytelling completo:
+  - Desafio, Processo, Solucao, Resultado
+  - Preview ao vivo (iframe) + link externo
+  - Navegacao anterior/proximo
 
-### 2. Sobre / A Kenkya
-- Layout assimétrico com a logo como elemento visual
-- Quem é a Kenkya, o que faz, qual a missão
-- Stack tecnológica com ícones animados
-- Animação de entrada no scroll
+### 3. Contato (footer bold)
+- Gradiente da marca + links diretos (WhatsApp, Email, LinkedIn, GitHub)
+- Sem formulario — apenas icones com hover animations
 
-### 3. Projetos (3-5 cases)
-Cada projeto com storytelling na jornada do herói:
-- **Cards com preview visual** — screenshot/mockup com hover zoom
-- Página de detalhe por projeto:
-  - O Desafio → O Processo → A Solução → O Resultado
-  - Preview ao vivo do site (iframe embed quando possível)
-  - Botão para acessar o site/sistema real
-- Transições suaves com scroll animations
-- Navegação entre projetos (anterior/próximo)
-
-### 4. Contato
-- Design bold com gradiente da marca
-- Links diretos: WhatsApp, Email, LinkedIn, GitHub
-- Ícones com hover animations nas cores da Kenkya
+**Sem** secao "Sobre" separada. Se necessario, uma frase curta no Hero basta.
 
 ---
 
-## Interatividade & Dinamismo
-- Scroll animations em todas as seções (fade, slide, parallax)
-- Cursor personalizado com efeitos de hover
-- Hover states elaborados nos cards e botões
-- Preview ao vivo dos sites em mockups de dispositivo
-- Transições de página suaves
+## Correcoes Tecnicas
 
-## Assets
-- Copiar logo (`user-uploads://logo1.png`) para `src/assets/logo.png` e `public/favicon.png`
-- Usar a logo como favicon do site
-- Título do site: "Kenkya — Design & Desenvolvimento Web"
+### 1. Fix do build error
+O CSS usa `font-body` e `font-display` mas o `tailwind.config.ts` nao define essas fontes. Vamos adicionar:
 
-## Estrutura
-- Página principal: Hero + Sobre + Projetos + Contato
-- Páginas de detalhe: Uma rota por projeto com storytelling completo
-- Sem backend — dados hardcoded, links diretos para contato
+```
+fontFamily: {
+  display: ['Syne', 'sans-serif'],
+  body: ['Space Grotesk', 'sans-serif'],
+}
+```
 
+### 2. Atualizar `index.html`
+- Titulo: "Kenkya -- Design & Desenvolvimento Web"
+- Favicon apontando para `/favicon.png`
+- Meta tags atualizadas
+
+### 3. Atualizar `tailwind.config.ts`
+- Adicionar fontFamily (display/body)
+- Adicionar cores Kenkya (purple, blue, cyan)
+- Adicionar keyframes customizados para animacoes
+
+### 4. Criar componentes
+- `src/components/Hero.tsx` — hero section com animacoes framer-motion
+- `src/components/ProjectCard.tsx` — card de projeto com hover effects
+- `src/components/ProjectsSection.tsx` — grid de projetos
+- `src/components/ContactFooter.tsx` — footer com links
+- `src/components/CursorEffect.tsx` — cursor interativo com particulas
+- `src/components/AnimatedShapes.tsx` — formas geometricas do background
+
+### 5. Criar pagina de detalhe
+- `src/pages/ProjectDetail.tsx` — storytelling completo do projeto
+
+### 6. Dados dos projetos
+- `src/data/projects.ts` — array hardcoded com titulo, descricao, slug, imagens placeholder, desafio/processo/solucao/resultado, link externo
+
+### 7. Atualizar `App.tsx`
+- Adicionar rota `/projeto/:slug`
+
+### 8. Reescrever `src/pages/Index.tsx`
+- Montar: Hero + ProjectsSection + ContactFooter
+- Scroll animations com framer-motion (useInView)
+
+## Ordem de Execucao
+1. Fix build: `tailwind.config.ts` + `index.html`
+2. Dados: `projects.ts`
+3. Componentes: CursorEffect, AnimatedShapes, Hero, ProjectCard, ProjectsSection, ContactFooter
+4. Paginas: Index, ProjectDetail
+5. Rotas: App.tsx
