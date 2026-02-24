@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,16 +17,44 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    try {
+      const { data, error } = await signIn(email, password);
 
-    if (error) {
-      toast.error("Credenciais inválidas");
+      if (error) {
+        toast.error("Credenciais inválidas");
+        return;
+      }
+
+      const userId = data.user?.id;
+      if (!userId) {
+        toast.error("Login realizado, mas a sessão é inválida.");
+        return;
+      }
+
+      const { data: hasAdminRole, error: roleError } = await supabase.rpc("has_role", {
+        _user_id: userId,
+        _role: "admin",
+      });
+
+      if (roleError) {
+        toast.error("Login realizado, mas não foi possível validar sua permissão.");
+        return;
+      }
+
+      if (!hasAdminRole) {
+        toast.error("Conta autenticada, mas sem permissão de admin.");
+        await supabase.auth.signOut();
+        return;
+      }
+
+      toast.success("Login realizado!");
+      navigate("/admin");
+    } catch (error) {
+      console.error("Erro inesperado no login:", error);
+      toast.error("Erro inesperado ao fazer login");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    toast.success("Login realizado!");
-    navigate("/admin");
   };
 
   return (
@@ -62,3 +91,4 @@ const Login = () => {
 };
 
 export default Login;
+

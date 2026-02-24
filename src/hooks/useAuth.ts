@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { User, Session } from "@supabase/supabase-js";
+import type { Session, User } from "@supabase/supabase-js";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -9,40 +9,77 @@ export function useAuth() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    let isMounted = true;
+    let adminCheckSequence = 0;
 
-        if (session?.user) {
-          // Check admin role using the has_role function
-          const { data } = await supabase.rpc("has_role", {
-            _user_id: session.user.id,
-            _role: "admin",
-          });
-          setIsAdmin(!!data);
-        } else {
-          setIsAdmin(false);
-        }
+    const setBaseAuthState = (nextSession: Session | null) => {
+      if (!isMounted) return;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+    };
 
+    const finishAsLoggedOut = () => {
+      if (!isMounted) return;
+      setIsAdmin(false);
+      setLoading(false);
+    };
+
+    const checkAdmin = async (userId: string, sequence: number) => {
+      try {
+        const { data, error } = await supabase.rpc("has_role", {
+          _user_id: userId,
+          _role: "admin",
+        });
+
+        if (error) throw error;
+        if (!isMounted || sequence !== adminCheckSequence) return;
+
+        setIsAdmin(!!data);
+      } catch (error) {
+        console.error("Erro ao validar permissão admin:", error);
+        if (!isMounted || sequence !== adminCheckSequence) return;
+
+        setIsAdmin(false);
+      } finally {
+        if (!isMounted || sequence !== adminCheckSequence) return;
         setLoading(false);
       }
-    );
+    };
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const syncAuthState = (nextSession: Session | null) => {
+      setBaseAuthState(nextSession);
 
-      if (session?.user) {
-        supabase
-          .rpc("has_role", { _user_id: session.user.id, _role: "admin" })
-          .then(({ data }) => setIsAdmin(!!data));
+      if (!nextSession?.user) {
+        finishAsLoggedOut();
+        return;
       }
 
-      setLoading(false);
+      const sequence = ++adminCheckSequence;
+      if (isMounted) setLoading(true);
+      void checkAdmin(nextSession.user.id, sequence);
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      syncAuthState(nextSession);
     });
 
-    return () => subscription.unsubscribe();
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: currentSession } }) => {
+        syncAuthState(currentSession);
+      })
+      .catch((error) => {
+        console.error("Erro ao recuperar sessão:", error);
+        setBaseAuthState(null);
+        finishAsLoggedOut();
+      });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = (email: string, password: string) =>
@@ -52,3 +89,4 @@ export function useAuth() {
 
   return { user, session, loading, isAdmin, signIn, signOut };
 }
+
