@@ -10,14 +10,17 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import FileUpload from "@/components/FileUpload";
 import {
-  useAdminProject, useCreateProject, useUpdateProject,
+  useAdminProject, useAdminProjects, useCreateProject, useUpdateProject, useRepositionProject,
 } from "@/hooks/useAdminProjects";
 import { useCategories } from "@/hooks/useAdminCategories";
 import { useProjectCategories, useSaveProjectCategories } from "@/hooks/useAdminProjects";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+const ITEMS_PER_PAGE = 12;
 
 const schema = z.object({
   title: z.string().min(1, "Título obrigatório"),
@@ -30,7 +33,6 @@ const schema = z.object({
   testimonial_image: z.string().optional(),
   testimonial_audio: z.string().optional(),
   published: z.boolean(),
-  display_order: z.number(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -63,13 +65,17 @@ const Section = ({ title, defaultOpen = true, children }: SectionProps) => {
 
 const AdminProjectForm = ({ projectId, onBack }: AdminProjectFormProps) => {
   const { data: existing, isLoading } = useAdminProject(projectId);
+  const { data: allProjects = [] } = useAdminProjects();
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
+  const repositionProject = useRepositionProject();
   const { data: allCategories = [] } = useCategories();
   const { data: projectCategoryIds = [] } = useProjectCategories(projectId);
   const saveProjectCategories = useSaveProjectCategories();
 
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedPage, setSelectedPage] = useState<string>("auto");
+  const [selectedPosition, setSelectedPosition] = useState<string>("1");
 
   const {
     register, handleSubmit, setValue, watch, reset, formState: { errors },
@@ -79,9 +85,14 @@ const AdminProjectForm = ({ projectId, onBack }: AdminProjectFormProps) => {
       title: "", slug: "", description: "", image: "",
       showcase_image: "", live_url: "",
       testimonial_text: "", testimonial_image: "", testimonial_audio: "",
-      published: false, display_order: 0,
+      published: false,
     },
   });
+
+  // Calculate total pages from all projects
+  const totalProjects = allProjects.length;
+  const totalPages = Math.ceil(totalProjects / ITEMS_PER_PAGE) || 1;
+  const maxPageOption = totalPages + 1;
 
   useEffect(() => {
     if (existing) {
@@ -96,8 +107,12 @@ const AdminProjectForm = ({ projectId, onBack }: AdminProjectFormProps) => {
         testimonial_image: existing.testimonial_image ?? "",
         testimonial_audio: existing.testimonial_audio ?? "",
         published: existing.published,
-        display_order: existing.display_order,
       });
+      // Convert display_order to page/position
+      const page = Math.floor(existing.display_order / ITEMS_PER_PAGE) + 1;
+      const position = (existing.display_order % ITEMS_PER_PAGE) + 1;
+      setSelectedPage(String(page));
+      setSelectedPosition(String(position));
     }
   }, [existing, reset]);
 
@@ -119,6 +134,11 @@ const AdminProjectForm = ({ projectId, onBack }: AdminProjectFormProps) => {
   };
 
   const onSubmit = async (data: FormData) => {
+    const isAuto = selectedPage === "auto";
+    const displayOrder = isAuto
+      ? -1 // signal for auto
+      : (parseInt(selectedPage) - 1) * ITEMS_PER_PAGE + (parseInt(selectedPosition) - 1);
+
     const payload = {
       title: data.title, slug: data.slug, description: data.description,
       image: data.image,
@@ -127,16 +147,41 @@ const AdminProjectForm = ({ projectId, onBack }: AdminProjectFormProps) => {
       testimonial_text: data.testimonial_text || null,
       testimonial_image: data.testimonial_image || null,
       testimonial_audio: data.testimonial_audio || null,
-      published: data.published, display_order: data.display_order,
+      published: data.published,
+      display_order: isAuto ? undefined : displayOrder,
     };
 
     try {
       let id = projectId;
       if (projectId) {
-        await updateProject.mutateAsync({ id: projectId, ...payload });
+        // Update project without display_order (handled by reposition)
+        const { display_order: _, ...updatePayload } = payload;
+        await updateProject.mutateAsync({ id: projectId, ...updatePayload });
+
+        // Handle repositioning if not auto and position changed
+        if (!isAuto) {
+          const oldOrder = existing?.display_order;
+          if (oldOrder !== displayOrder) {
+            await repositionProject.mutateAsync({
+              projectId,
+              newOrder: displayOrder,
+              oldOrder,
+            });
+          }
+        }
       } else {
-        const created = await createProject.mutateAsync(payload);
-        id = created.id;
+        if (!isAuto) {
+          // Create at end first, then reposition
+          const created = await createProject.mutateAsync({ ...payload, display_order: -1 });
+          id = created.id;
+          await repositionProject.mutateAsync({
+            projectId: created.id,
+            newOrder: displayOrder,
+          });
+        } else {
+          const created = await createProject.mutateAsync({ ...payload, display_order: -1 });
+          id = created.id;
+        }
       }
       if (id) {
         await saveProjectCategories.mutateAsync({ projectId: id, categoryIds: selectedCategoryIds });
@@ -157,7 +202,11 @@ const AdminProjectForm = ({ projectId, onBack }: AdminProjectFormProps) => {
   }
 
   const published = watch("published");
-  const isSaving = createProject.isPending || updateProject.isPending;
+  const isSaving = createProject.isPending || updateProject.isPending || repositionProject.isPending;
+
+  const previewText = selectedPage === "auto"
+    ? "Automático — o projeto irá para o final da lista"
+    : `Página ${selectedPage}, posição ${selectedPosition} do portfólio`;
 
   return (
     <div className="pb-24">
@@ -259,10 +308,49 @@ const AdminProjectForm = ({ projectId, onBack }: AdminProjectFormProps) => {
             <Switch checked={published} onCheckedChange={(v) => setValue("published", v)} />
             <Label>Publicado</Label>
           </div>
-          <div>
-            <Label>Ordem de exibição</Label>
-            <Input type="number" {...register("display_order", { valueAsNumber: true })} />
-            <p className="text-xs text-muted-foreground mt-1">Números menores aparecem primeiro. Reordene na lista de projetos.</p>
+
+          <div className="space-y-3">
+            <Label>Posição no portfólio</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">Página</Label>
+                <Select value={selectedPage} onValueChange={(v) => {
+                  setSelectedPage(v);
+                  if (v === "auto") setSelectedPosition("1");
+                }}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">Automático (mais recente)</SelectItem>
+                    {Array.from({ length: maxPageOption }, (_, i) => (
+                      <SelectItem key={i + 1} value={String(i + 1)}>
+                        Página {i + 1}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedPage !== "auto" && (
+                <div>
+                  <Label className="text-xs text-muted-foreground">Posição na página</Label>
+                  <Select value={selectedPosition} onValueChange={setSelectedPosition}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: ITEMS_PER_PAGE }, (_, i) => (
+                        <SelectItem key={i + 1} value={String(i + 1)}>
+                          Posição {i + 1}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">{previewText}</p>
           </div>
         </Section>
 
