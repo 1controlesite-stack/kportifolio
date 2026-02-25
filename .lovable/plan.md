@@ -1,46 +1,73 @@
 
-# Intensificar Grid de Fundo + Offwhite + Destaque nos Botoes
+# Auditoria de Contraste -- Todos os Botoes e Elementos Clicaveis
 
-## Mudancas
+## Problema Central
 
-### 1. Intensificar o xadrez de fundo (`src/index.css`)
-A opacidade atual do grid e `0.04` (praticamente invisivel). Aumentar para `0.09` para que o padrao fique mais perceptivel sem ser agressivo. Tambem trocar o fundo de branco puro (`228 33% 97%` = ~#F8F9FC) para um offwhite mais quente e confortavel (`230 25% 95%` = ~#F0F1F6).
+Os componentes de UI (pagination, buttons) usam variaveis do tema escuro (`--accent`, `--border`, `--muted-foreground`, etc.) que foram feitas para fundo escuro. Quando esses elementos aparecem dentro de `section-light` (fundo claro), o contraste desaparece -- texto cinza claro sobre fundo cinza claro.
 
-**Antes:**
-```css
---sl-bg: 228 33% 97%;
-background-image:
-  linear-gradient(to right, hsl(220 14% 46% / 0.04) 1px, transparent 1px),
-  linear-gradient(to bottom, hsl(220 14% 46% / 0.04) 1px, transparent 1px);
-```
+## Elementos com Problema de Contraste
 
-**Depois:**
-```css
---sl-bg: 230 25% 95%;
-background-image:
-  linear-gradient(to right, hsl(220 14% 46% / 0.09) 1px, transparent 1px),
-  linear-gradient(to bottom, hsl(220 14% 46% / 0.09) 1px, transparent 1px);
-```
+### 1. Paginacao (Anterior / Proximo / numeros) -- O PRINT
+- **Arquivo:** `src/components/PortfolioSection.tsx` (linhas 140-164)
+- **Causa:** `PaginationLink` usa `buttonVariants({ variant: "ghost" })` que aplica `hover:bg-accent hover:text-accent-foreground`. No tema escuro `accent` e um cinza escuro -- sobre fundo claro fica invisivel.
+- **Correcao:** Passar classes explicitas de cor no `className` dos componentes de paginacao para forcar contraste adequado no contexto section-light: `text-[hsl(var(--sl-fg))]` para texto, `hover:bg-[hsl(var(--sl-border))]` para hover.
 
-### 2. Cards com fundo offwhite em vez de branco (`src/index.css`)
-Ajustar a variavel `--sl-border` e `--sl-input` para combinar com o novo offwhite, mantendo contraste adequado.
+### 2. Botao "X" limpar busca nos filtros
+- **Arquivo:** `src/components/PortfolioFilters.tsx` (linha 37)
+- **Causa:** Usa `text-muted-foreground` (variavel escura) sobre fundo claro.
+- **Correcao:** Trocar para `text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))]`.
 
-### 3. Botoes do Hero mais destacados (`src/components/Hero.tsx`)
-Atualmente os dois botoes tem bordas finas e pouco contraste. Melhorar:
-- **"Ver Projetos"**: adicionar `gradient-bg text-white` (fundo gradiente solido) em vez de apenas borda
-- **"Visitar o Site"**: manter como outline mas aumentar opacidade da borda para `border-white/50` e `bg-white/15`
+### 3. Icone de busca nos filtros
+- **Arquivo:** `src/components/PortfolioFilters.tsx` (linha 30)
+- **Causa:** `text-muted-foreground` sobre fundo claro.
+- **Correcao:** Trocar para `text-[hsl(var(--sl-muted))]`.
 
-### 4. Botao "Ver ao vivo" no ProjectDetail (`src/pages/ProjectDetail.tsx`)
-Ja usa `gradient-bg`, esta ok. Nenhuma mudanca necessaria.
+### 4. Navegacao prev/next no ProjectDetail
+- **Arquivo:** `src/pages/ProjectDetail.tsx` (linhas 134, 139)
+- **Status:** Ja usa `text-[hsl(var(--sl-muted))]` -- OK, mas o hover pode ser mais forte.
+- **Correcao:** Adicionar `font-medium` ao hover state para melhor destaque.
 
-### 5. Cards do portfolio -- fundo offwhite (`src/components/ProjectCard.tsx`)
-Os cards usam `bg-card` (tema escuro). Na secao de projetos (que e escura), isso esta correto. Nenhuma mudanca necessaria aqui pois a secao de projetos fica no tema escuro.
+### 5. Botao "Ver mais / Ver menos" na descricao
+- **Arquivo:** `src/pages/ProjectDetail.tsx` (linha 16)
+- **Status:** Usa `text-primary` que e roxo -- funciona OK no claro. Sem mudanca necessaria.
+
+### 6. Botao "Voltar" no header do ProjectDetail
+- **Arquivo:** `src/pages/ProjectDetail.tsx` (linha 62)
+- **Status:** Ja usa `text-[hsl(var(--sl-muted))]` -- OK.
+
+### 7. Botao "Ver ao vivo" no header do ProjectDetail
+- **Arquivo:** `src/pages/ProjectDetail.tsx` (linha 67)
+- **Status:** Usa `gradient-bg text-primary-foreground` -- OK, alto contraste.
+
+### 8. Pagina 404
+- **Arquivo:** `src/pages/NotFound.tsx`
+- **Causa:** Usa `bg-muted` (cinza escuro do tema) como fundo e `text-muted-foreground` -- fica tudo escuro/ilegivel.
+- **Correcao:** Aplicar `section-light` como fundo e ajustar as cores dos textos.
 
 ---
 
-## Resumo de arquivos
+## Detalhes Tecnicos das Correcoes
+
+### `src/components/PortfolioSection.tsx`
+Nas linhas da paginacao, adicionar classes de cor explicitas:
+- `PaginationPrevious` e `PaginationNext`: adicionar `text-[hsl(var(--sl-fg))] hover:bg-[hsl(var(--sl-border))]`
+- `PaginationLink`: adicionar `text-[hsl(var(--sl-fg))] hover:bg-[hsl(var(--sl-border))]`, e quando `isActive` usar `border-[hsl(var(--sl-fg))] text-[hsl(var(--sl-fg))]`
+- `PaginationEllipsis`: fica no mesmo contexto, adicionar `text-[hsl(var(--sl-muted))]`
+
+### `src/components/PortfolioFilters.tsx`
+- Linha 30 (Search icon): `text-muted-foreground` -> `text-[hsl(var(--sl-muted))]`
+- Linha 37 (X button): `text-muted-foreground hover:text-foreground` -> `text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))]`
+
+### `src/pages/NotFound.tsx`
+- `bg-muted` -> `section-light`
+- Textos: usar variaveis `--sl-fg` e `--sl-muted`
+- Link "Return to Home": manter `text-primary` (funciona em ambos fundos)
+
+## Resumo
 
 | Arquivo | Mudanca |
 |---|---|
-| `src/index.css` | Offwhite no `--sl-bg`, grid mais intenso (0.04 -> 0.09) |
-| `src/components/Hero.tsx` | Botao "Ver Projetos" com gradient-bg, "Visitar o Site" com mais destaque |
+| `PortfolioSection.tsx` | Classes de cor explicitas na paginacao (prev, next, numeros, ellipsis) |
+| `PortfolioFilters.tsx` | Icone de busca e botao X com cores section-light |
+| `NotFound.tsx` | Fundo section-light + cores de texto ajustadas |
+| `ProjectDetail.tsx` | Hover mais forte nos links de navegacao |
