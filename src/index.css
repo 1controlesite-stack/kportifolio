@@ -71,15 +71,15 @@
   }
 
   .section-light {
-    --sl-bg: 228 33% 97%;
+    --sl-bg: 230 25% 95%;
     --sl-fg: 240 20% 13%;
     --sl-muted: 220 14% 46%;
-    --sl-border: 220 13% 91%;
-    --sl-input: 220 14% 96%;
+    --sl-border: 225 15% 88%;
+    --sl-input: 228 18% 93%;
     background-color: hsl(var(--sl-bg));
     background-image: 
-      linear-gradient(to right, hsl(220 14% 46% / 0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(220 14% 46% / 0.04) 1px, transparent 1px);
+      linear-gradient(to right, hsl(220 14% 46% / 0.09) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(220 14% 46% / 0.09) 1px, transparent 1px);
     background-size: 60px 60px;
   }
 }
