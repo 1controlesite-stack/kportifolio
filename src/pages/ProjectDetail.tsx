@@ -131,12 +131,12 @@ const ProjectDetail = () => {
       <div className="max-w-3xl mx-auto px-4 pb-20">
         <div className="flex justify-between items-center pt-8 border-t border-[hsl(var(--sl-border))]">
           {prev ? (
-            <Link to={`/projeto/${prev.slug}`} className="flex items-center gap-2 text-sm text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))] transition-colors">
+            <Link to={`/projeto/${prev.slug}`} className="flex items-center gap-2 text-sm font-medium text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))] transition-colors">
               <ArrowLeft className="w-4 h-4" /> {prev.title}
             </Link>
           ) : <div />}
           {next ? (
-            <Link to={`/projeto/${next.slug}`} className="flex items-center gap-2 text-sm text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))] transition-colors">
+            <Link to={`/projeto/${next.slug}`} className="flex items-center gap-2 text-sm font-medium text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))] transition-colors">
               {next.title} <ArrowRight className="w-4 h-4" />
             </Link>
           ) : <div />}

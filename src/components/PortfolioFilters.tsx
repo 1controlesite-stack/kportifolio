@@ -27,14 +27,14 @@ const PortfolioFilters = ({
   return (
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-12">
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(var(--sl-muted))]" />
         <input
           type="text" value={searchQuery} onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Buscar projetos..."
           className="w-full h-11 pl-9 pr-8 rounded-full bg-[hsl(var(--sl-input))] border border-[hsl(var(--sl-border))] text-base text-[hsl(var(--sl-fg))] placeholder:text-[hsl(var(--sl-muted))] font-body focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
         />
         {searchQuery && (
-          <button onClick={() => onSearchChange("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={() => onSearchChange("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))] transition-colors">
             <X className="w-3.5 h-3.5" />
           </button>
         )}
