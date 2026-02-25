@@ -75,15 +75,77 @@ export function useCreateProject() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (project: TablesInsert<"projects">) => {
+      // If display_order not specified (auto), put at end
+      let finalProject = { ...project };
+      if (finalProject.display_order === undefined || finalProject.display_order === -1) {
+        const { data: maxRow } = await supabase
+          .from("projects")
+          .select("display_order")
+          .order("display_order", { ascending: false })
+          .limit(1)
+          .single();
+        finalProject.display_order = (maxRow?.display_order ?? -1) + 1;
+      }
       const { data, error } = await supabase
         .from("projects")
-        .insert(project)
+        .insert(finalProject)
         .select()
         .single();
       if (error) throw error;
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-projects"] }),
+  });
+}
+
+export function useRepositionProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      newOrder,
+      oldOrder,
+    }: {
+      projectId: string;
+      newOrder: number;
+      oldOrder?: number;
+    }) => {
+      // Set temp order to avoid conflicts during shifting
+      if (oldOrder !== undefined && oldOrder !== newOrder) {
+        await supabase
+          .from("projects")
+          .update({ display_order: -9999 })
+          .eq("id", projectId);
+      }
+
+      // Increment everything >= newOrder to make room
+      const { data: toShift } = await supabase
+        .from("projects")
+        .select("id, display_order")
+        .gte("display_order", newOrder)
+        .neq("id", projectId)
+        .order("display_order", { ascending: false });
+
+      if (toShift && toShift.length > 0) {
+        for (const row of toShift) {
+          await supabase
+            .from("projects")
+            .update({ display_order: row.display_order + 1 })
+            .eq("id", row.id);
+        }
+      }
+
+      // Set the project to its new position
+      const { error } = await supabase
+        .from("projects")
+        .update({ display_order: newOrder })
+        .eq("id", projectId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-projects"] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
+    },
   });
 }
 
