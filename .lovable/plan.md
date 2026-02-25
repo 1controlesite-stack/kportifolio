@@ -1,73 +1,76 @@
 
-# Auditoria de Contraste -- Todos os Botoes e Elementos Clicaveis
 
-## Problema Central
+# Ordem por Pagina + Posicao no Formulario de Projeto
 
-Os componentes de UI (pagination, buttons) usam variaveis do tema escuro (`--accent`, `--border`, `--muted-foreground`, etc.) que foram feitas para fundo escuro. Quando esses elementos aparecem dentro de `section-light` (fundo claro), o contraste desaparece -- texto cinza claro sobre fundo cinza claro.
+## Conceito
 
-## Elementos com Problema de Contraste
+Substituir o input numerico "Ordem de exibicao" por dois selects intuitivos: **Pagina** e **Posicao na pagina**. O portfolio publico exibe 12 projetos por pagina, entao:
 
-### 1. Paginacao (Anterior / Proximo / numeros) -- O PRINT
-- **Arquivo:** `src/components/PortfolioSection.tsx` (linhas 140-164)
-- **Causa:** `PaginationLink` usa `buttonVariants({ variant: "ghost" })` que aplica `hover:bg-accent hover:text-accent-foreground`. No tema escuro `accent` e um cinza escuro -- sobre fundo claro fica invisivel.
-- **Correcao:** Passar classes explicitas de cor no `className` dos componentes de paginacao para forcar contraste adequado no contexto section-light: `text-[hsl(var(--sl-fg))]` para texto, `hover:bg-[hsl(var(--sl-border))]` para hover.
+- **Pagina 1, Posicao 3** = `display_order = 2` (zero-indexed: `(1-1)*12 + (3-1)`)
+- **Pagina 2, Posicao 1** = `display_order = 12`
 
-### 2. Botao "X" limpar busca nos filtros
-- **Arquivo:** `src/components/PortfolioFilters.tsx` (linha 37)
-- **Causa:** Usa `text-muted-foreground` (variavel escura) sobre fundo claro.
-- **Correcao:** Trocar para `text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))]`.
+Se o usuario nao preencher (deixar "Automatico"), o projeto vai para o final da lista (comportamento atual com `max + 1`).
 
-### 3. Icone de busca nos filtros
-- **Arquivo:** `src/components/PortfolioFilters.tsx` (linha 30)
-- **Causa:** `text-muted-foreground` sobre fundo claro.
-- **Correcao:** Trocar para `text-[hsl(var(--sl-muted))]`.
+## Mudancas
 
-### 4. Navegacao prev/next no ProjectDetail
-- **Arquivo:** `src/pages/ProjectDetail.tsx` (linhas 134, 139)
-- **Status:** Ja usa `text-[hsl(var(--sl-muted))]` -- OK, mas o hover pode ser mais forte.
-- **Correcao:** Adicionar `font-medium` ao hover state para melhor destaque.
+### 1. Formulario do projeto (`src/components/AdminProjectForm.tsx`)
 
-### 5. Botao "Ver mais / Ver menos" na descricao
-- **Arquivo:** `src/pages/ProjectDetail.tsx` (linha 16)
-- **Status:** Usa `text-primary` que e roxo -- funciona OK no claro. Sem mudanca necessaria.
+Na secao "Configuracoes", remover o input numerico e adicionar:
 
-### 6. Botao "Voltar" no header do ProjectDetail
-- **Arquivo:** `src/pages/ProjectDetail.tsx` (linha 62)
-- **Status:** Ja usa `text-[hsl(var(--sl-muted))]` -- OK.
+- **Select "Pagina"**: opcoes de 1 ate `totalPages + 1` (a proxima pagina possivel). Opcao padrao: "Automatico (mais recente)"
+- **Select "Posicao na pagina"**: opcoes de 1 a 12. So aparece quando uma pagina e selecionada
+- Preview textual: "Este projeto aparecera na **pagina 2, posicao 3** do portfolio"
+- Ao salvar, converter para `display_order = (pagina - 1) * 12 + (posicao - 1)`
+- Ao carregar projeto existente, fazer o inverso: `pagina = floor(display_order / 12) + 1`, `posicao = (display_order % 12) + 1`
 
-### 7. Botao "Ver ao vivo" no header do ProjectDetail
-- **Arquivo:** `src/pages/ProjectDetail.tsx` (linha 67)
-- **Status:** Usa `gradient-bg text-primary-foreground` -- OK, alto contraste.
+### 2. Hook de projetos (`src/hooks/useAdminProjects.ts`)
 
-### 8. Pagina 404
-- **Arquivo:** `src/pages/NotFound.tsx`
-- **Causa:** Usa `bg-muted` (cinza escuro do tema) como fundo e `text-muted-foreground` -- fica tudo escuro/ilegivel.
-- **Correcao:** Aplicar `section-light` como fundo e ajustar as cores dos textos.
+- No `useCreateProject`, quando `display_order` nao for especificado (automatico), buscar o `max(display_order)` dos projetos existentes e usar `max + 1`
+- Ao inserir um projeto em uma posicao especifica, deslocar os projetos subsequentes: incrementar o `display_order` de todos os projetos que tem `display_order >= novaPosicao`
 
----
+### 3. Logica de deslocamento
 
-## Detalhes Tecnicos das Correcoes
+Quando o usuario escolhe pagina 1 posicao 3 (`display_order = 2`):
+- Todos os projetos com `display_order >= 2` tem seu `display_order` incrementado em 1
+- O novo projeto recebe `display_order = 2`
+- Isso "empurra" os projetos existentes para baixo sem conflitos
 
-### `src/components/PortfolioSection.tsx`
-Nas linhas da paginacao, adicionar classes de cor explicitas:
-- `PaginationPrevious` e `PaginationNext`: adicionar `text-[hsl(var(--sl-fg))] hover:bg-[hsl(var(--sl-border))]`
-- `PaginationLink`: adicionar `text-[hsl(var(--sl-fg))] hover:bg-[hsl(var(--sl-border))]`, e quando `isActive` usar `border-[hsl(var(--sl-fg))] text-[hsl(var(--sl-fg))]`
-- `PaginationEllipsis`: fica no mesmo contexto, adicionar `text-[hsl(var(--sl-muted))]`
+Na edicao, se o usuario muda a posicao:
+- Remove o projeto da posicao antiga (decrementa os que estavam depois)
+- Insere na nova posicao (incrementa os que estao na nova posicao em diante)
 
-### `src/components/PortfolioFilters.tsx`
-- Linha 30 (Search icon): `text-muted-foreground` -> `text-[hsl(var(--sl-muted))]`
-- Linha 37 (X button): `text-muted-foreground hover:text-foreground` -> `text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))]`
+## Detalhes Tecnicos
 
-### `src/pages/NotFound.tsx`
-- `bg-muted` -> `section-light`
-- Textos: usar variaveis `--sl-fg` e `--sl-muted`
-- Link "Return to Home": manter `text-primary` (funciona em ambos fundos)
+### Calculo de paginas disponiveis
+```text
+const totalProjects = projects.length (todos os projetos publicados + rascunhos)
+const ITEMS_PER_PAGE = 12
+const totalPages = Math.ceil(totalProjects / ITEMS_PER_PAGE) || 1
+// Oferecer ate totalPages + 1 (proxima pagina)
+```
 
-## Resumo
+### Conversao display_order <-> pagina/posicao
+```text
+// Para o formulario (leitura):
+const page = Math.floor(display_order / 12) + 1
+const position = (display_order % 12) + 1
+
+// Para salvar (escrita):
+const display_order = (page - 1) * 12 + (position - 1)
+```
+
+### Mutation de reposicionamento (`useAdminProjects.ts`)
+```text
+useRepositionProject: recebe { projectId, newOrder }
+1. Se editando: busca o display_order atual do projeto
+2. Incrementa display_order de todos projetos com display_order >= newOrder (exceto o proprio)
+3. Atualiza o projeto com o novo display_order
+```
+
+## Resumo de arquivos
 
 | Arquivo | Mudanca |
 |---|---|
-| `PortfolioSection.tsx` | Classes de cor explicitas na paginacao (prev, next, numeros, ellipsis) |
-| `PortfolioFilters.tsx` | Icone de busca e botao X com cores section-light |
-| `NotFound.tsx` | Fundo section-light + cores de texto ajustadas |
-| `ProjectDetail.tsx` | Hover mais forte nos links de navegacao |
+| `src/components/AdminProjectForm.tsx` | Trocar input numerico por selects de Pagina + Posicao com preview |
+| `src/hooks/useAdminProjects.ts` | Adicionar logica de reposicionamento e auto-order |
+
