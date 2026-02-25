@@ -1,29 +1,19 @@
 
+# Adicionar botao "Acessar Site" ao Hero
 
-# Substituir textura quadriculada por grid sutil tipo o exemplo
+## Mudanca
 
-## Problema
+**Arquivo:** `src/components/Hero.tsx`
 
-A textura atual usa um padrao checkerboard (xadrez diagonal) que parece um PNG quebrado. O exemplo mostra um grid de linhas verticais e horizontais muito finas e sutis, quase invisiveis.
+Adicionar um segundo botao ao lado de "Ver Projetos" que direciona para `https://kenkya.com.br`. Os dois botoes ficarao lado a lado em um container flex.
 
-## Solucao
+### Detalhes
 
-Substituir o `background-image` da classe `.section-light` em `src/index.css` por um grid de linhas retas (verticais + horizontais) com opacidade muito baixa (~2%), criando aquele efeito de "malha fina" elegante como no print de referencia.
-
-## Detalhes tecnicos
-
-### Arquivo: `src/index.css`
-
-Substituir as linhas 80-86 (o background-image atual com gradientes diagonais) por:
-
-```css
-background-image: 
-  linear-gradient(to right, hsl(220 14% 46% / 0.04) 1px, transparent 1px),
-  linear-gradient(to bottom, hsl(220 14% 46% / 0.04) 1px, transparent 1px);
-background-size: 60px 60px;
-```
-
-Isso cria linhas retas finas (1px) com espacamento de 60px, com opacidade de apenas 4% -- sutil e delicado como no exemplo.
+- Envolver os dois botoes em uma `motion.div` com `flex gap-4` e `flex-wrap` (para mobile empilhar se necessario)
+- O botao "Ver Projetos" permanece como esta
+- Novo botao "Acessar Site" com `<a>` estilizado como o botao existente, abrindo em nova aba (`target="_blank" rel="noopener noreferrer"`)
+- Estilo levemente diferenciado: fundo semi-transparente branco (`bg-white/10`) para distinguir do outro, mantendo o mesmo estilo geral
+- Texto: "Acessar Site" (curto e claro)
+- Mesma animacao de entrada com delay ligeiramente maior (1.1s)
 
 ### Nenhum outro arquivo precisa ser alterado
-
