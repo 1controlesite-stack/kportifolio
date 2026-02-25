@@ -1,42 +1,28 @@
 
 
-# Combobox para filtro de categorias + Validacao de seguranca
+# Corrigir perda de estado ao trocar aba do navegador
 
-## 1. Combobox com busca no filtro de categorias
+## Problema
 
-**Arquivo:** `src/components/AdminProjectList.tsx`
+Quando o usuario esta no formulario de novo projeto e troca para outra aba do navegador, ao voltar o formulario desaparece e ele volta para a lista de projetos.
 
-Substituir o `Select` atual de categorias por um Combobox construido com `Popover` + `Command` (cmdk), permitindo digitar para buscar entre as categorias.
+**Causa raiz**: O hook `useAuth` escuta eventos de autenticacao (`onAuthStateChange`). Ao voltar para a aba, o token e renovado, disparando `syncAuthState` que define `loading = true`. O `AdminRoute` ve `loading = true`, renderiza o spinner e desmonta o componente `Admin`. Quando o loading termina, o `Admin` remonta com estado inicial `{ type: "list" }`.
 
-Comportamento:
-- Botao trigger mostra "Todas as categorias" ou o nome da categoria selecionada
-- Ao abrir, exibe campo de busca (CommandInput) + lista filtravel (CommandList)
-- Ao selecionar, fecha o popover e aplica o filtro
-- Opcao "Todas as categorias" sempre visivel no topo
-- Icone de check na categoria ativa
-- CommandEmpty com mensagem "Nenhuma categoria encontrada"
+## Solucao
 
-Componentes usados (ja instalados):
-- `Popover`, `PopoverTrigger`, `PopoverContent`
-- `Command`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`
-- `Check` e `ChevronsUpDown` do lucide-react
-
-## 2. Seguranca -- ja garantida no banco
-
-A seguranca do admin **ja esta corretamente implementada no banco de dados**, nao apenas no frontend:
-
-- Todas as tabelas (`projects`, `categories`, `project_categories`) possuem RLS ativo
-- Policies de INSERT/UPDATE/DELETE usam `has_role(auth.uid(), 'admin')` -- uma funcao `SECURITY DEFINER`
-- A tabela `user_roles` so permite SELECT para admins
-- Projetos nao publicados so sao visiveis para admins (policy separada)
-- O frontend (`AdminRoute`) e apenas UX -- mesmo sem ele, o banco rejeita operacoes de usuarios nao-admin
-
-Nenhuma mudanca no banco necessaria. A seguranca esta correta.
+Modificar o `useAuth` para nao voltar ao estado de `loading = true` apos o carregamento inicial. A re-verificacao de admin pode acontecer em background sem desmontar a tela.
 
 ## Detalhes tecnicos
 
-### Arquivo modificado
-- `src/components/AdminProjectList.tsx` -- trocar Select por Combobox (Popover + Command)
+### Arquivo: `src/hooks/useAuth.ts`
 
-### Sem dependencias novas
-Todos os componentes necessarios ja estao instalados (cmdk, radix-popover).
+1. Adicionar uma flag `initialLoadDone` (useRef) para rastrear se o primeiro carregamento ja terminou
+2. Na funcao `syncAuthState`, so definir `setLoading(true)` se `initialLoadDone` ainda for `false`
+3. Apos o primeiro carregamento (no `finally` de `checkAdmin` ou em `finishAsLoggedOut`), marcar `initialLoadDone.current = true`
+4. Em re-verificacoes subsequentes (tab focus, token refresh), atualizar `isAdmin` silenciosamente sem afetar `loading`
+
+Isso garante que o `AdminRoute` so mostra spinner no carregamento inicial da pagina, e nao ao trocar de aba.
+
+### Nenhum outro arquivo precisa ser alterado
+
+O `AdminRoute` e o `Admin` continuam funcionando como estao -- a correcao e isolada no hook.
