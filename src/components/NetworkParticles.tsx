@@ -64,6 +64,16 @@ const NetworkParticles = () => {
     const onLeave = () => { mouseRef.current = { x: -9999, y: -9999 }; };
     window.addEventListener("mouseleave", onLeave);
 
+    const onTouch = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      const rect = canvas.getBoundingClientRect();
+      mouseRef.current = { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+    };
+    const onTouchEnd = () => { mouseRef.current = { x: -9999, y: -9999 }; };
+    canvas.addEventListener("touchmove", onTouch, { passive: true });
+    canvas.addEventListener("touchend", onTouchEnd);
+
     const MAX_DIST = 150;
     const MOUSE_RADIUS = 200;
 
@@ -151,6 +161,8 @@ const NetworkParticles = () => {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("mousemove", onMouse);
       window.removeEventListener("mouseleave", onLeave);
+      canvas.removeEventListener("touchmove", onTouch);
+      canvas.removeEventListener("touchend", onTouchEnd);
     };
   }, []);
 

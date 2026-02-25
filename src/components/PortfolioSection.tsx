@@ -112,7 +112,7 @@ const PortfolioSection = () => {
           <AnimatePresence mode="wait">
             <motion.div
               key={`${activeCategory}-${currentPage}`}
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-6 items-end"
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4 md:gap-x-0 items-end md:[&>*:first-child]:mr-[-1.5rem] md:[&>*:not(:first-child)]:ml-[-1.5rem]"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -123,7 +123,7 @@ const PortfolioSection = () => {
                 const zIndex = 4 - col;
                 return (
                   <motion.div key={project.slug} className="relative transition-none"
-                    style={{ zIndex: hoveredSlug === project.slug ? 100 : zIndex, ...(col === 0 ? { marginRight: "-1.5rem" } : { marginLeft: "-1.5rem" }) }}
+                    style={{ zIndex: hoveredSlug === project.slug ? 100 : zIndex }}
                     initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
                     viewport={{ once: true, margin: "-50px" }}
                     transition={{ duration: 0.4, delay: i * 0.06 }} whileHover={{ scale: 1.03 }}
