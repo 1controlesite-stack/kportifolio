@@ -149,6 +149,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      reorder_project: {
+        Args: { p_new_order: number; p_project_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"

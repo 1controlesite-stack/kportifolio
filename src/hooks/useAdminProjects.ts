@@ -104,42 +104,14 @@ export function useRepositionProject() {
     mutationFn: async ({
       projectId,
       newOrder,
-      oldOrder,
     }: {
       projectId: string;
       newOrder: number;
-      oldOrder?: number;
     }) => {
-      // Set temp order to avoid conflicts during shifting
-      if (oldOrder !== undefined && oldOrder !== newOrder) {
-        await supabase
-          .from("projects")
-          .update({ display_order: -9999 })
-          .eq("id", projectId);
-      }
-
-      // Increment everything >= newOrder to make room
-      const { data: toShift } = await supabase
-        .from("projects")
-        .select("id, display_order")
-        .gte("display_order", newOrder)
-        .neq("id", projectId)
-        .order("display_order", { ascending: false });
-
-      if (toShift && toShift.length > 0) {
-        for (const row of toShift) {
-          await supabase
-            .from("projects")
-            .update({ display_order: row.display_order + 1 })
-            .eq("id", row.id);
-        }
-      }
-
-      // Set the project to its new position
-      const { error } = await supabase
-        .from("projects")
-        .update({ display_order: newOrder })
-        .eq("id", projectId);
+      const { error } = await supabase.rpc('reorder_project', {
+        p_project_id: projectId,
+        p_new_order: newOrder,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
