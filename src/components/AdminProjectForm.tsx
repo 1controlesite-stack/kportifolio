@@ -154,7 +154,7 @@ const AdminProjectForm = ({ projectId, onBack }: AdminProjectFormProps) => {
     try {
       let id = projectId;
       if (projectId) {
-        // Update project without display_order (handled by reposition)
+        // Update project without display_order (handled by reposition RPC)
         const { display_order: _, ...updatePayload } = payload;
         await updateProject.mutateAsync({ id: projectId, ...updatePayload });
 
@@ -165,22 +165,20 @@ const AdminProjectForm = ({ projectId, onBack }: AdminProjectFormProps) => {
             await repositionProject.mutateAsync({
               projectId,
               newOrder: displayOrder,
-              oldOrder,
             });
           }
         }
       } else {
+        // Create project (auto order handled by useCreateProject)
+        const created = await createProject.mutateAsync({ ...payload, display_order: -1 });
+        id = created.id;
+
+        // If specific position chosen, reposition after creation
         if (!isAuto) {
-          // Create at end first, then reposition
-          const created = await createProject.mutateAsync({ ...payload, display_order: -1 });
-          id = created.id;
           await repositionProject.mutateAsync({
             projectId: created.id,
             newOrder: displayOrder,
           });
-        } else {
-          const created = await createProject.mutateAsync({ ...payload, display_order: -1 });
-          id = created.id;
         }
       }
       if (id) {
