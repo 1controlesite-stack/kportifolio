@@ -66,7 +66,7 @@ const Hero = () => {
           >
             <button
               onClick={() => document.getElementById("projetos")?.scrollIntoView({ behavior: "smooth" })}
-              className="px-10 py-3.5 rounded-full border border-white/30 text-white/90 font-body font-light text-xs tracking-[0.3em] uppercase hover:border-white/60 hover:text-white transition-all duration-300"
+              className="px-10 py-3.5 rounded-full gradient-bg text-white font-body font-medium text-xs tracking-[0.3em] uppercase shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-105 transition-all duration-300"
             >
               Ver Projetos
             </button>
@@ -74,7 +74,7 @@ const Hero = () => {
               href="https://kenkya.com.br"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-10 py-3.5 rounded-full border border-white/30 bg-white/10 text-white/90 font-body font-light text-xs tracking-[0.3em] uppercase hover:border-white/60 hover:text-white transition-all duration-300"
+              className="px-10 py-3.5 rounded-full border border-white/50 bg-white/15 text-white font-body font-light text-xs tracking-[0.3em] uppercase hover:border-white/70 hover:bg-white/25 hover:text-white transition-all duration-300"
             >
               Visitar o Site
             </a>
