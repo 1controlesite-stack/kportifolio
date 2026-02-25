@@ -1,76 +1,64 @@
 
 
-# Ordem por Pagina + Posicao no Formulario de Projeto
+# Corrigir Sistema de Ordenacao de Projetos
 
-## Conceito
+## Problemas Identificados
 
-Substituir o input numerico "Ordem de exibicao" por dois selects intuitivos: **Pagina** e **Posicao na pagina**. O portfolio publico exibe 12 projetos por pagina, entao:
+1. **Todos os projetos tem `display_order: 0`** no banco de dados. Foram criados antes do sistema de pagina/posicao existir, e o default da coluna e `0`.
+2. **A logica de reposicionamento e fragil**: faz N updates individuais via JavaScript, sem atomicidade. Se algo falha no meio, os dados ficam inconsistentes.
+3. **Sem normalizacao inicial**: nao existe migracao para corrigir os valores existentes.
 
-- **Pagina 1, Posicao 3** = `display_order = 2` (zero-indexed: `(1-1)*12 + (3-1)`)
-- **Pagina 2, Posicao 1** = `display_order = 12`
+## Solucao
 
-Se o usuario nao preencher (deixar "Automatico"), o projeto vai para o final da lista (comportamento atual com `max + 1`).
+### 1. Migracao: Normalizar `display_order` existente
 
-## Mudancas
+Criar uma migracao SQL que atribui `display_order` sequencial (0, 1, 2, ...) baseado na ordem de `created_at`:
 
-### 1. Formulario do projeto (`src/components/AdminProjectForm.tsx`)
-
-Na secao "Configuracoes", remover o input numerico e adicionar:
-
-- **Select "Pagina"**: opcoes de 1 ate `totalPages + 1` (a proxima pagina possivel). Opcao padrao: "Automatico (mais recente)"
-- **Select "Posicao na pagina"**: opcoes de 1 a 12. So aparece quando uma pagina e selecionada
-- Preview textual: "Este projeto aparecera na **pagina 2, posicao 3** do portfolio"
-- Ao salvar, converter para `display_order = (pagina - 1) * 12 + (posicao - 1)`
-- Ao carregar projeto existente, fazer o inverso: `pagina = floor(display_order / 12) + 1`, `posicao = (display_order % 12) + 1`
-
-### 2. Hook de projetos (`src/hooks/useAdminProjects.ts`)
-
-- No `useCreateProject`, quando `display_order` nao for especificado (automatico), buscar o `max(display_order)` dos projetos existentes e usar `max + 1`
-- Ao inserir um projeto em uma posicao especifica, deslocar os projetos subsequentes: incrementar o `display_order` de todos os projetos que tem `display_order >= novaPosicao`
-
-### 3. Logica de deslocamento
-
-Quando o usuario escolhe pagina 1 posicao 3 (`display_order = 2`):
-- Todos os projetos com `display_order >= 2` tem seu `display_order` incrementado em 1
-- O novo projeto recebe `display_order = 2`
-- Isso "empurra" os projetos existentes para baixo sem conflitos
-
-Na edicao, se o usuario muda a posicao:
-- Remove o projeto da posicao antiga (decrementa os que estavam depois)
-- Insere na nova posicao (incrementa os que estao na nova posicao em diante)
-
-## Detalhes Tecnicos
-
-### Calculo de paginas disponiveis
-```text
-const totalProjects = projects.length (todos os projetos publicados + rascunhos)
-const ITEMS_PER_PAGE = 12
-const totalPages = Math.ceil(totalProjects / ITEMS_PER_PAGE) || 1
-// Oferecer ate totalPages + 1 (proxima pagina)
+```sql
+WITH ordered AS (
+  SELECT id, ROW_NUMBER() OVER (ORDER BY created_at ASC) - 1 AS new_order
+  FROM projects
+)
+UPDATE projects SET display_order = ordered.new_order
+FROM ordered WHERE projects.id = ordered.id;
 ```
 
-### Conversao display_order <-> pagina/posicao
-```text
-// Para o formulario (leitura):
-const page = Math.floor(display_order / 12) + 1
-const position = (display_order % 12) + 1
+### 2. Migracao: Criar funcao RPC `reorder_project`
 
-// Para salvar (escrita):
-const display_order = (page - 1) * 12 + (position - 1)
+Criar uma funcao Postgres atomica que faz todo o shift de uma vez, evitando inconsistencias:
+
+```text
+reorder_project(p_project_id UUID, p_new_order INT)
+1. Busca o display_order atual do projeto
+2. Se igual ao novo, sai
+3. Move o projeto para -9999 temporariamente
+4. Se movendo para frente (new < old): incrementa tudo entre new e old-1
+5. Se movendo para tras (new > old): decrementa tudo entre old+1 e new
+6. Seta o projeto no novo valor
+Tudo em uma unica transacao
 ```
 
-### Mutation de reposicionamento (`useAdminProjects.ts`)
+### 3. Simplificar `useRepositionProject` (`src/hooks/useAdminProjects.ts`)
+
+Trocar os N updates individuais por uma unica chamada RPC:
+
 ```text
-useRepositionProject: recebe { projectId, newOrder }
-1. Se editando: busca o display_order atual do projeto
-2. Incrementa display_order de todos projetos com display_order >= newOrder (exceto o proprio)
-3. Atualiza o projeto com o novo display_order
+await supabase.rpc('reorder_project', { p_project_id: projectId, p_new_order: newOrder })
 ```
+
+### 4. Corrigir `useCreateProject` (`src/hooks/useAdminProjects.ts`)
+
+Garantir que ao criar com auto (`display_order = -1`), o projeto receba `max(display_order) + 1` corretamente. Se `max` retornar null (nenhum projeto), usar 0.
+
+### 5. Corrigir formulario (`src/components/AdminProjectForm.tsx`)
+
+- Quando em modo auto e criando, nao chamar `repositionProject` (ja resolvido no create)
+- Quando editando e mudando posicao, chamar o RPC direto
 
 ## Resumo de arquivos
 
 | Arquivo | Mudanca |
 |---|---|
-| `src/components/AdminProjectForm.tsx` | Trocar input numerico por selects de Pagina + Posicao com preview |
-| `src/hooks/useAdminProjects.ts` | Adicionar logica de reposicionamento e auto-order |
-
+| Migracao SQL | Normalizar display_order + criar funcao RPC `reorder_project` |
+| `src/hooks/useAdminProjects.ts` | Simplificar `useRepositionProject` para usar RPC; corrigir auto-order no create |
+| `src/components/AdminProjectForm.tsx` | Ajustar fluxo de save para usar o novo RPC corretamente |
