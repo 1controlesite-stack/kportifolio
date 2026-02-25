@@ -58,15 +58,15 @@ const Hero = () => {
             Kenkya
           </motion.h1>
 
-          <motion.a
-            href="#projetos"
+          <motion.button
+            onClick={() => document.getElementById("projetos")?.scrollIntoView({ behavior: "smooth" })}
             className="mt-8 px-10 py-3.5 rounded-full border border-white/30 text-white/90 font-body font-light text-xs tracking-[0.3em] uppercase hover:border-white/60 hover:text-white transition-all duration-300"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1, duration: 0.8 }}
           >
             Ver Projetos
-          </motion.a>
+          </motion.button>
         </motion.div>
 
         {/* Scroll indicator */}

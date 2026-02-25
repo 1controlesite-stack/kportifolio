@@ -109,23 +109,30 @@ const PortfolioSection = () => {
           </motion.div>
         ) : (
           <>
-          <AnimatePresence mode="popLayout">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-6 items-end">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${activeCategory}-${currentPage}`}
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-6 items-end"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+            >
               {paginatedItems.map((project, i) => {
                 const col = i % 4;
                 const zIndex = 4 - col;
                 return (
-                  <motion.div key={project.slug} layout className="relative transition-none"
+                  <motion.div key={project.slug} className="relative transition-none"
                     style={{ zIndex: hoveredSlug === project.slug ? 100 : zIndex, ...(col === 0 ? { marginRight: "-1.5rem" } : { marginLeft: "-1.5rem" }) }}
-                    initial={{ opacity: 0, y: 40, scale: 0.95 }} whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }} viewport={{ once: true, margin: "-50px" }}
-                    transition={{ duration: 0.5, delay: i * 0.08 }} whileHover={{ scale: 1.03 }}
+                    initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{ duration: 0.4, delay: i * 0.06 }} whileHover={{ scale: 1.03 }}
                     onHoverStart={() => setHoveredSlug(project.slug)} onHoverEnd={() => setHoveredSlug(null)}>
                     <PortfolioCard project={project} />
                   </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
           </AnimatePresence>
 
           {totalPages > 1 && (
