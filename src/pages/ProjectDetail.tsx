@@ -35,7 +35,7 @@ const ProjectDetail = () => {
   const hasTestimonial = project.testimonial_text || project.testimonial_image || project.testimonial_audio;
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen section-light">
       {/* Header */}
       <motion.div
         className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border"

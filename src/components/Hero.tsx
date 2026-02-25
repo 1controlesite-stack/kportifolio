@@ -76,7 +76,7 @@ const Hero = () => {
               rel="noopener noreferrer"
               className="px-10 py-3.5 rounded-full border border-white/30 bg-white/10 text-white/90 font-body font-light text-xs tracking-[0.3em] uppercase hover:border-white/60 hover:text-white transition-all duration-300"
             >
-              Acessar Site
+              Visitar o Site
             </a>
           </motion.div>
         </motion.div>
