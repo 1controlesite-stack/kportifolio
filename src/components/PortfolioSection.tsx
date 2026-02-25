@@ -140,24 +140,24 @@ const PortfolioSection = () => {
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
-                    <PaginationPrevious onClick={() => currentPage > 1 && goToPage(currentPage - 1)}
-                      className={currentPage <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                  <PaginationPrevious onClick={() => currentPage > 1 && goToPage(currentPage - 1)}
+                      className={`text-[hsl(var(--sl-fg))] hover:bg-[hsl(var(--sl-border))] ${currentPage <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}`} />
                   </PaginationItem>
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
                     if (totalPages <= 5 || page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1) {
                       return (
                         <PaginationItem key={page}>
-                          <PaginationLink isActive={page === currentPage} onClick={() => goToPage(page)} className="cursor-pointer">{page}</PaginationLink>
+                          <PaginationLink isActive={page === currentPage} onClick={() => goToPage(page)} className={`cursor-pointer text-[hsl(var(--sl-fg))] hover:bg-[hsl(var(--sl-border))] ${page === currentPage ? "border-[hsl(var(--sl-fg))]" : ""}`}>{page}</PaginationLink>
                         </PaginationItem>
                       );
                     }
-                    if (page === 2 && currentPage > 3) return <PaginationItem key="start-ellipsis"><PaginationEllipsis /></PaginationItem>;
-                    if (page === totalPages - 1 && currentPage < totalPages - 2) return <PaginationItem key="end-ellipsis"><PaginationEllipsis /></PaginationItem>;
+                    if (page === 2 && currentPage > 3) return <PaginationItem key="start-ellipsis"><PaginationEllipsis className="text-[hsl(var(--sl-muted))]" /></PaginationItem>;
+                    if (page === totalPages - 1 && currentPage < totalPages - 2) return <PaginationItem key="end-ellipsis"><PaginationEllipsis className="text-[hsl(var(--sl-muted))]" /></PaginationItem>;
                     return null;
                   })}
                   <PaginationItem>
                     <PaginationNext onClick={() => currentPage < totalPages && goToPage(currentPage + 1)}
-                      className={currentPage >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+                      className={`text-[hsl(var(--sl-fg))] hover:bg-[hsl(var(--sl-border))] ${currentPage >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}`} />
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
