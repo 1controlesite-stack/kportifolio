@@ -68,7 +68,7 @@ const ProjectDetail = () => {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
           {project.title}
         </motion.h1>
-        <motion.p className="text-lg text-muted-foreground mb-6"
+        <motion.p className="text-lg text-muted-foreground mb-6 whitespace-pre-line"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}>
           {project.description}
         </motion.p>
