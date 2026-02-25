@@ -1,8 +1,25 @@
+import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, ExternalLink, Loader2, Quote } from "lucide-react";
 import { useProjects, useProject } from "@/hooks/useProjects";
 
+const CollapsibleDescription = ({ description }: { description: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}>
+      <p className={`text-lg text-[hsl(var(--sl-muted))] whitespace-pre-line ${!expanded ? 'line-clamp-3' : ''}`}>
+        {description}
+      </p>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="text-sm text-primary hover:underline mt-1 mb-6"
+      >
+        {expanded ? 'Ver menos' : 'Ver mais'}
+      </button>
+    </motion.div>
+  );
+};
 const ProjectDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -21,7 +38,7 @@ const ProjectDetail = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <h1 className="text-2xl font-display font-bold text-foreground mb-4">Projeto não encontrado</h1>
+          <h1 className="text-2xl font-display font-bold text-[hsl(var(--sl-fg))] mb-4">Projeto não encontrado</h1>
           <Link to="/" className="text-primary hover:underline">Voltar ao início</Link>
         </div>
       </div>
@@ -38,11 +55,11 @@ const ProjectDetail = () => {
     <main className="min-h-screen section-light">
       {/* Header */}
       <motion.div
-        className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border"
+        className="sticky top-0 z-40 bg-[hsl(var(--sl-bg)/0.8)] backdrop-blur-md border-b border-[hsl(var(--sl-border))]"
         initial={{ y: -60 }} animate={{ y: 0 }} transition={{ duration: 0.4 }}
       >
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <button onClick={() => navigate("/")} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={() => navigate("/")} className="flex items-center gap-2 text-sm text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))] transition-colors">
             <ArrowLeft className="w-4 h-4" /> Voltar
           </button>
           {project.live_url && (
@@ -68,13 +85,10 @@ const ProjectDetail = () => {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
           {project.title}
         </motion.h1>
-        <motion.p className="text-lg text-muted-foreground mb-6 whitespace-pre-line"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}>
-          {project.description}
-        </motion.p>
+        <CollapsibleDescription description={project.description} />
         <div className="flex flex-wrap gap-2 mb-16">
           {project.categories.map((cat) => (
-            <span key={cat.id} className="text-xs px-3 py-1 rounded-full bg-muted text-muted-foreground">
+            <span key={cat.id} className="text-xs px-3 py-1 rounded-full bg-[hsl(var(--sl-border))] text-[hsl(var(--sl-muted))]">
               {cat.name}
             </span>
           ))}
@@ -85,15 +99,15 @@ const ProjectDetail = () => {
       {hasTestimonial && (
         <div className="max-w-3xl mx-auto px-4 pb-20">
           <motion.div
-            className="rounded-xl border border-border bg-card p-8"
+            className="rounded-xl border border-[hsl(var(--sl-border))] bg-[hsl(var(--sl-card))] p-8"
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }} transition={{ duration: 0.6 }}>
-            <h2 className="text-xl font-display font-bold text-foreground mb-6 flex items-center gap-2">
+            <h2 className="text-xl font-display font-bold text-[hsl(var(--sl-fg))] mb-6 flex items-center gap-2">
               <Quote className="w-5 h-5 text-primary" /> Depoimento do Cliente
             </h2>
 
             {project.testimonial_text && (
-              <blockquote className="text-muted-foreground italic text-lg leading-relaxed border-l-4 border-primary/30 pl-4 mb-6">
+              <blockquote className="text-[hsl(var(--sl-muted))] italic text-lg leading-relaxed border-l-4 border-primary/30 pl-4 mb-6">
                 "{project.testimonial_text}"
               </blockquote>
             )}
@@ -115,14 +129,14 @@ const ProjectDetail = () => {
 
       {/* Navigation */}
       <div className="max-w-3xl mx-auto px-4 pb-20">
-        <div className="flex justify-between items-center pt-8 border-t border-border">
+        <div className="flex justify-between items-center pt-8 border-t border-[hsl(var(--sl-border))]">
           {prev ? (
-            <Link to={`/projeto/${prev.slug}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link to={`/projeto/${prev.slug}`} className="flex items-center gap-2 text-sm text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))] transition-colors">
               <ArrowLeft className="w-4 h-4" /> {prev.title}
             </Link>
           ) : <div />}
           {next ? (
-            <Link to={`/projeto/${next.slug}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link to={`/projeto/${next.slug}`} className="flex items-center gap-2 text-sm text-[hsl(var(--sl-muted))] hover:text-[hsl(var(--sl-fg))] transition-colors">
               {next.title} <ArrowRight className="w-4 h-4" />
             </Link>
           ) : <div />}
