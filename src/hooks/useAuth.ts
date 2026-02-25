@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 
@@ -11,6 +11,7 @@ export function useAuth() {
   useEffect(() => {
     let isMounted = true;
     let adminCheckSequence = 0;
+    const initialLoadDone = { current: false };
 
     const setBaseAuthState = (nextSession: Session | null) => {
       if (!isMounted) return;
@@ -21,6 +22,7 @@ export function useAuth() {
     const finishAsLoggedOut = () => {
       if (!isMounted) return;
       setIsAdmin(false);
+      initialLoadDone.current = true;
       setLoading(false);
     };
 
@@ -42,6 +44,7 @@ export function useAuth() {
         setIsAdmin(false);
       } finally {
         if (!isMounted || sequence !== adminCheckSequence) return;
+        initialLoadDone.current = true;
         setLoading(false);
       }
     };
@@ -55,7 +58,7 @@ export function useAuth() {
       }
 
       const sequence = ++adminCheckSequence;
-      if (isMounted) setLoading(true);
+      if (isMounted && !initialLoadDone.current) setLoading(true);
       void checkAdmin(nextSession.user.id, sequence);
     };
 
